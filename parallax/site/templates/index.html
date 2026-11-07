@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}Events{% endblock %}
+{% block body %}
+<section class="intro">
+  <h1>Who said what, officially</h1>
+  <p>Statements by heads of government, foreign and finance ministries, central banks and international organisations, grouped by event. Pick an event to see where the official lines agree and where they part.</p>
+</section>
+
+<section>
+  <h2 class="small">Countries with official statements, last {{ 45 }} days</h2>
+  {{ m.map(activity.keys() | list, root) }}
+  <p class="muted small">Coloured: at least one statement by the head of government, foreign ministry, finance ministry or government press office. Central banks and international organisations are listed on each event, never coloured onto a country.</p>
+</section>
+
+<section class="filters">
+  <input id="q" type="search" placeholder="Search events or actors" aria-label="Search events">
+  <select id="domain" aria-label="Domain">
+    <option value="">All domains</option>
+    <option value="politics">Politics</option>
+    <option value="economics">Economics</option>
+  </select>
+  <label><input id="multi" type="checkbox" checked> Only events with 2+ actors</label>
+</section>
+
+<ul class="events" id="events">
+{% for e in events %}
+  <li class="event{% if e.featured %} featured{% endif %}"
+      data-domain="{{ e.domain or '' }}" data-actors="{{ (e.countries + e.orgs) | length }}"
+      data-text="{{ (e.title ~ ' ' ~ (e.summary or '') ~ ' ' ~ ((e.countries + e.orgs) | map('lower') | join(' '))) | lower }}">
+    <div class="event-head">
+      <a class="event-title" href="event/{{ e.slug }}.html">{{ e.title }}</a>
+      <span class="muted small">{{ e.first_seen | date }}{% if e.last_seen and e.last_seen[:10] != e.first_seen[:10] %} – {{ e.last_seen | date }}{% endif %}</span>
+    </div>
+    {% if e.summary %}<p class="summary">{{ e.summary }}</p>{% endif %}
+    <div class="chips">
+      {% for a in e.countries + e.orgs %}{{ m.chip(a, root) }}{% endfor %}
+      {% if e.analysis %}<span class="badge">compared</span>{% if e.analysis.metrics.contested %}<span class="badge">{{ e.analysis.metrics.contested | length }} contested</span>{% endif %}{% endif %}
+    </div>
+  </li>
+{% else %}
+  <li class="muted">No events yet. Run the pipeline: <code>uv run parallax run</code>.</li>
+{% endfor %}
+</ul>
+{% endblock %}
+{% block scripts %}
+{{ m.map_scripts(root) }}
+<script>
+(function () {
+  const q = document.getElementById('q'), d = document.getElementById('domain'),
+        multi = document.getElementById('multi');
+  function apply() {
+    const text = q.value.trim().toLowerCase();
+    document.querySelectorAll('#events li.event').forEach(li => {
+      const dom = li.dataset.domain;
+      const ok = (!text || li.dataset.text.includes(text))
+        && (!d.value || dom === d.value || dom === 'both')
+        && (!multi.checked || Number(li.dataset.actors) >= 2);
+      li.hidden = !ok;
+    });
+  }
+  [q, d, multi].forEach(el => el.addEventListener('input', apply));
+  apply();
+})();
+</script>
+{% endblock %}

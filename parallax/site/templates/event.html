@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% import "_macros.html" as m %}
+{% block title %}{{ e.title }}{% endblock %}
+{% block body %}
+{% set a = e.analysis %}
+<article class="event-page">
+  <p class="muted small">{{ e.first_seen | date }}{% if e.last_seen and e.last_seen[:10] != e.first_seen[:10] %} – {{ e.last_seen | date }}{% endif %} · {{ e.statements | length }} statements · {{ (e.countries + e.orgs) | length }} actors</p>
+  <h1>{{ e.title }}</h1>
+  {% if e.summary %}<p class="lead">{{ e.summary }}</p>{% endif %}
+
+  <div class="grid-2">
+    <div>{{ m.map(e.map_iso, root) }}</div>
+    <div>
+      <h2 class="small">Spoke</h2>
+      <div class="chips">{% for x in e.countries + e.orgs %}{{ m.chip(x, root) }}{% endfor %}</div>
+      {% if a and a.metrics.silent %}
+      <h2 class="small">Active on this topic recently, no statement on this event</h2>
+      <div class="chips">{% for s in a.metrics.silent %}{{ m.chip(s.actor, root) }}{% endfor %}</div>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if a %}
+  <section>
+    <h2>Where the official lines meet and part</h2>
+    <p class="muted small">● asserts &nbsp; ◐ qualifies &nbsp; ○ denies &nbsp; blank: no stance in the statements we have. Hover or tap a symbol for the quote.</p>
+    <div class="table-wrap">
+    <table class="matrix">
+      <thead><tr><th>Proposition</th>{% for c in e.matrix.columns %}<th>{{ actors[c].name }}</th>{% endfor %}</tr></thead>
+      <tbody>
+      {% for r in e.matrix.rows %}
+        <tr class="{{ 'floor' if r.floor else '' }} {{ 'contested' if r.contested else '' }}">
+          <td>{{ r.prop.text }}{% if r.floor %} <span class="badge">shared floor</span>{% endif %}{% if r.contested %} <span class="badge">contested</span>{% endif %}</td>
+          {% for c in r.cells %}<td class="cell">{% if c.stance %}<span class="stance" title="“{{ c.quote }}”" tabindex="0">{{ stance_symbol[c.stance] }}</span>{% endif %}</td>{% endfor %}
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  {% set mt = a.metrics %}
+  {% if mt.polar_pair or mt.unusual_alignment or mt.shared_wording %}
+  <section>
+    <h2>Notable patterns</h2>
+    <ul class="notes">
+      {% if mt.polar_pair %}<li><strong>Furthest apart:</strong> {{ actors[mt.polar_pair.pair[0]].name }} and {{ actors[mt.polar_pair.pair[1]].name }} (agreement {{ '%.2f' % mt.polar_pair.score }} on a 0–1 scale).</li>{% endif %}
+      {% for u in mt.unusual_alignment %}<li><strong>{{ u.kind | capitalize }}:</strong> {{ actors[u.pair[0]].name }} and {{ actors[u.pair[1]].name }} score {{ '%.2f' % u.score }} here, against {{ '%.2f' % u.baseline }} on average over {{ u.events }} earlier events.</li>{% endfor %}
+      {% for w in mt.shared_wording %}<li><strong>Shared wording:</strong> {{ actors[w.pair[0]].name }} and {{ actors[w.pair[1]].name }} use {{ w.shared_phrases }} identical 8-word sequences, e.g. “{{ w.example }}”.</li>{% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  {% if a.llm.terminology %}
+  <section>
+    <h2>Same thing, different words</h2>
+    <table class="terms">
+      {% for t in a.llm.terminology %}
+      <tr><th>{{ t.concept }}</th><td>{% for u in t.usages %}<span class="term"><span class="muted">{{ actors[u.actor].name if u.actor in actors else u.actor }}:</span> “{{ u.term }}”</span>{% endfor %}</td></tr>
+      {% endfor %}
+    </table>
+  </section>
+  {% endif %}
+
+  {% if a.llm.framing %}
+  <section>
+    <h2>Emphasis</h2>
+    <ul class="notes">{% for f in a.llm.framing %}<li><strong>{{ actors[f.actor].name if f.actor in actors else f.actor }}:</strong> {{ f.frame }}</li>{% endfor %}</ul>
+  </section>
+  {% endif %}
+  {% else %}
+  <p class="muted">Not compared yet. Events are compared once at least two actors have spoken.</p>
+  {% endif %}
+
+  <section>
+    <h2>The statements</h2>
+    {% for actor_id, items in e.by_actor.items() %}
+    <h3>{{ m.chip(actor_id, root) }}</h3>
+    <ul class="statements">
+      {% for s in items %}
+      <li>
+        <a href="{{ s.url }}" rel="noopener" target="_blank">{{ s.title }}</a>
+        <span class="muted small">{{ s.date | date }} · {{ s.kind | replace('_', ' ') }}</span>
+        {% if s.summary %}<p class="summary">{{ s.summary }}</p>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% endfor %}
+  </section>
+
+  {% if a %}<p class="muted small">Compared {{ e.analysed_at | date }} with {{ a.model }}. <a href="{{ root }}/method.html">How this works</a>.</p>{% endif %}
+</article>
+{% endblock %}
+{% block scripts %}{{ m.map_scripts(root) }}{% endblock %}

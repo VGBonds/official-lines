@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"><channel><title>Press</title>
+<item><title>Statement on the strait</title><link>https://example.gov/news/strait?utm_source=rss</link>
+<pubDate>Tue, 03 Nov 2026 10:00:00 GMT</pubDate><description>Short teaser.</description></item>
+<item><title>Rate decision</title><link>https://example.gov/news/rates</link>
+<pubDate>Wed, 04 Nov 2026 14:00:00 +0100</pubDate></item>
+<item><title>No link item</title></item>
+</channel></rss>

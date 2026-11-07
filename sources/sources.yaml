@@ -1,0 +1,980 @@
+# Parallax source catalog. Verified 2026-11-07 by probing from a residential connection.
+# UA: Mozilla/5.0 (compatible; ParallaxBot/0.1; research; +https://github.com/parallax-official-lines), 20s timeout, no JS, no challenge bypass.
+# Note: this machine's Python CA bundle fails TLS verification for most hosts (TLS-intercepting proxy?); probes used curl with the system keychain.
+sources:
+
+  # ---------------- United States
+  - id: us-wh-statements
+    actor: US
+    kind: head_of_government
+    name: "The White House - Briefings & Statements"
+    homepage: https://www.whitehouse.gov/
+    method: rss
+    url: "https://www.whitehouse.gov/briefings-statements/feed/"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 30 items, newest 2026-11-05"
+  - id: us-wh-actions
+    actor: US
+    kind: head_of_government
+    name: "The White House - Presidential Actions"
+    homepage: https://www.whitehouse.gov/
+    method: rss
+    url: "https://www.whitehouse.gov/presidential-actions/feed/"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 30 items, newest 2026-11-05"
+  - id: us-state
+    actor: US
+    kind: mfa
+    name: "U.S. Department of State - Press Releases"
+    homepage: https://www.state.gov/
+    method: rss
+    url: "https://www.state.gov/rss-feed/press-releases/feed/"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 10 items, newest 2026-11-06; previously WAF-blocked (2026-09); works again now"
+  - id: us-treasury
+    actor: US
+    kind: finance
+    name: "U.S. Department of the Treasury - Press Releases"
+    homepage: https://home.treasury.gov/
+    method: html
+    url: "https://home.treasury.gov/news/press-releases"
+    link_selector: "h3.featured-stories__headline a"
+    link_pattern: "/news/press-releases/[a-z]+\\d+/?$"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 10 links, article text present (sentences=11 chars=2374)"
+  - id: us-fed
+    actor: US
+    kind: central_bank
+    name: "Board of Governors of the Federal Reserve System"
+    homepage: https://www.federalreserve.gov/
+    method: rss
+    url: "https://www.federalreserve.gov/feeds/press_all.xml"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 20 items, newest 2026-11-05"
+
+  # ---------------- China
+  - id: cn-gov
+    actor: CN
+    kind: head_of_government
+    name: "The State Council of the People's Republic of China (English)"
+    homepage: https://english.www.gov.cn/
+    method: html
+    url: "https://english.www.gov.cn/news/"
+    link_selector: "h3 a"
+    link_pattern: "/news/\\d{6}/\\d{2}/content_[A-Za-z0-9]+\\.html$"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 15 links, article text present (sentences=34 chars=5444); State Council news; mixes Xi/Li Qiang activities"
+  - id: cn-mfa
+    actor: CN
+    kind: mfa
+    name: "Ministry of Foreign Affairs of the People's Republic of China"
+    homepage: https://www.fmprc.gov.cn/eng/
+    method: html
+    url: "https://www.fmprc.gov.cn/eng/xw/fyrbt/"
+    link_selector: "div.list_box a"
+    link_pattern: "/eng/xw/fyrbt/.+/t\\d+_\\d+\\.html$"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 14 links, article text present (sentences=45 chars=8296); spokesperson remarks + regular press conference transcripts"
+  - id: cn-mof
+    actor: CN
+    kind: finance
+    name: "Ministry of Finance of the People's Republic of China"
+    homepage: https://www.mof.gov.cn/en/
+    method: html
+    url: "https://www.mof.gov.cn/en/news/mn/"
+    link_selector: "a[href]"
+    link_pattern: "/en/news/mn/\\d{6}/t\\d+_\\d+\\.htm$"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 10 links, article text present (sentences=3 chars=724); english.mof.gov.cn no longer resolves; use www.mof.gov.cn/en/"
+  - id: cn-pboc
+    actor: CN
+    kind: central_bank
+    name: "People's Bank of China - News & Events"
+    homepage: https://www.pbc.gov.cn/en/3688006/index.html
+    method: html
+    url: "https://www.pbc.gov.cn/en/3688110/3688172/2026/index.html"
+    link_selector: "a[href]"
+    link_pattern: "/en/3688110/3688172/\\d{4}/\\d+/index\\.html$"
+    enabled: false
+    status: blocked
+    notes: "robots.txt disallows bots (2026-11-07), so we do not read it. Earlier: probed 2026-11-07: 200, 10 links, article text present (sentences=5 chars=952); listing URL contains the year (2026) - must be rolled over each January; anchors have no text (titles only on article page)"
+
+  # ---------------- Russia
+  - id: ru-kremlin-news
+    actor: RU
+    kind: head_of_government
+    name: "President of Russia - News"
+    homepage: http://en.kremlin.ru/
+    method: rss
+    url: "http://en.kremlin.ru/events/president/news/feed"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 20 items, newest 2026-11-07"
+  - id: ru-kremlin-transcripts
+    actor: RU
+    kind: head_of_government
+    name: "President of Russia - Transcripts"
+    homepage: http://en.kremlin.ru/
+    method: rss
+    url: "http://en.kremlin.ru/events/president/transcripts/feed"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 20 items, newest 2026-11-07"
+  - id: ru-mfa
+    actor: RU
+    kind: mfa
+    name: "Ministry of Foreign Affairs of the Russian Federation"
+    homepage: https://mid.ru/en/
+    method: rss
+    url: "https://mid.ru/en/rss.php"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 10 items, newest 2026-11-07; item links are http:// - normalise to https"
+  - id: ru-gov
+    actor: RU
+    kind: gov_press
+    name: "Government of the Russian Federation"
+    homepage: http://government.ru/en/
+    method: rss
+    url: "https://government.ru/en/all/rss/"
+    enabled: false
+    status: blocked
+    notes: "probed 2026-11-07: not working; connection timeout (likely geo-filtered outside RU)"
+  - id: ru-minfin
+    actor: RU
+    kind: finance
+    name: "Ministry of Finance of the Russian Federation"
+    homepage: https://minfin.gov.ru/en/
+    method: html
+    url: "https://minfin.gov.ru/en/press-center/"
+    enabled: false
+    status: blocked
+    notes: "probed 2026-11-07: not working; 503 'Доступ временно ограничен' (access restricted, likely geo-block)"
+  - id: ru-cbr
+    actor: RU
+    kind: central_bank
+    name: "Bank of Russia"
+    homepage: https://www.cbr.ru/eng/
+    method: html
+    url: "https://www.cbr.ru/eng/news/"
+    enabled: false
+    status: js_only
+    notes: "probed 2026-11-07: not working; English news/press listings rendered by JS; RSS https://www.cbr.ru/rss/RssPress is Russian-only (lang=en ignored); /eng/press/keypr/ is a static page with the latest key-rate decision only"
+
+  # ---------------- United Kingdom
+  - id: gb-pm
+    actor: GB
+    kind: head_of_government
+    name: "Prime Minister's Office, 10 Downing Street"
+    homepage: https://www.gov.uk/government/organisations/prime-ministers-office-10-downing-street
+    method: rss
+    url: "https://www.gov.uk/government/organisations/prime-ministers-office-10-downing-street.atom"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 20 items, newest 2026-11-05"
+  - id: gb-fcdo
+    actor: GB
+    kind: mfa
+    name: "Foreign, Commonwealth & Development Office"
+    homepage: https://www.gov.uk/government/organisations/foreign-commonwealth-development-office
+    method: rss
+    url: "https://www.gov.uk/government/organisations/foreign-commonwealth-development-office.atom"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 20 items, newest 2026-11-06; feed includes travel-advice updates - filter /foreign-travel-advice/"
+  - id: gb-hmt
+    actor: GB
+    kind: finance
+    name: "HM Treasury"
+    homepage: https://www.gov.uk/government/organisations/hm-treasury
+    method: rss
+    url: "https://www.gov.uk/government/organisations/hm-treasury.atom"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 20 items, newest 2026-11-06"
+  - id: gb-boe
+    actor: GB
+    kind: central_bank
+    name: "Bank of England"
+    homepage: https://www.bankofengland.co.uk/
+    method: rss
+    url: "https://www.bankofengland.co.uk/rss/news"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 50 items, newest 2026-11-05"
+
+  # ---------------- France
+  - id: fr-elysee
+    actor: FR
+    kind: head_of_government
+    name: "Élysée - Presidency of the French Republic (English)"
+    homepage: https://www.elysee.fr/en/
+    method: html
+    url: "https://www.elysee.fr/en/emmanuel-macron"
+    link_selector: "a.menuList-item-link"
+    link_pattern: "/en/emmanuel-macron/\\d{4}/\\d{2}/\\d{2}/"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 3 links, article text present (sentences=9 chars=1387); English output is very thin (3 items in last ~3 weeks vs. daily French output)"
+  - id: fr-mfa
+    actor: FR
+    kind: mfa
+    name: "France Diplomatie - Ministry for Europe and Foreign Affairs"
+    homepage: https://www.diplomatie.gouv.fr/en
+    method: html
+    url: "https://www.diplomatie.gouv.fr/en/press/news"
+    link_selector: "a[href]"
+    link_pattern: "/en/presse-et-ressources/.+/actualites/.+"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 12 links, article text present (sentences=18 chars=3947); English pages carry French URL slugs"
+  - id: fr-finance
+    actor: FR
+    kind: finance
+    name: "Ministry of the Economy and Finance"
+    homepage: https://www.economie.gouv.fr/en
+    method: html
+    url: "https://www.economie.gouv.fr/en"
+    enabled: false
+    status: blocked
+    notes: "probed 2026-11-07: not working; 403 Cloudflare 'Just a moment...' JS challenge"
+  - id: fr-bdf
+    actor: FR
+    kind: central_bank
+    name: "Banque de France"
+    homepage: https://www.banque-france.fr/en
+    method: html
+    url: "https://www.banque-france.fr/en/news"
+    link_selector: "a[href]"
+    link_pattern: "/en/news/[a-z0-9-]{20,}$"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 7 links, article text present (sentences=4 chars=922); mostly blog posts/surveys; press releases not separately listed in English"
+
+  # ---------------- Germany
+  - id: de-chancellor
+    actor: DE
+    kind: head_of_government
+    name: "Federal Chancellor (Bundeskanzler)"
+    homepage: https://www.bundeskanzler.de/bk-en
+    method: html
+    url: "https://www.bundeskanzler.de/bk-en"
+    link_selector: "a[href]"
+    link_pattern: "/bk-en/news/[a-z0-9-]+-\\d+$"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 4 links, article text present (sentences=42 chars=7658); homepage teaser list (~4 items); /bk-en/news listing and bundesregierung.de/breg-en/news are JS-rendered"
+  - id: de-gov
+    actor: DE
+    kind: gov_press
+    name: "Federal Government (Bundesregierung)"
+    homepage: https://www.bundesregierung.de/breg-en
+    method: html
+    url: "https://www.bundesregierung.de/breg-en/news"
+    enabled: false
+    status: js_only
+    notes: "probed 2026-11-07: not working; news list loaded by JS; no English RSS found"
+  - id: de-mfa
+    actor: DE
+    kind: mfa
+    name: "Federal Foreign Office (Auswärtiges Amt)"
+    homepage: https://www.auswaertiges-amt.de/en
+    method: html
+    url: "https://www.auswaertiges-amt.de/en/newsroom/news"
+    link_selector: "a[href]"
+    link_pattern: "/en/newsroom/news/\\d{7,}-\\d{7,}$"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 4 links, article text present (sentences=5 chars=931); only ~5 latest items in raw HTML; 6-digit ids are overview pages (excluded by pattern)"
+  - id: de-bmf
+    actor: DE
+    kind: finance
+    name: "Federal Ministry of Finance"
+    homepage: https://www.bundesfinanzministerium.de/Web/EN/Home/home.html
+    method: html
+    url: "https://www.bundesfinanzministerium.de/Web/EN/Home/home.html"
+    link_selector: "a[href]"
+    link_pattern: "/Content/EN/(Pressemitteilungen|Standardartikel)/.+\\.html"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 8 links, article text present (sentences=52 chars=8214); relative hrefs must be resolved against <base href=https://www.bundesfinanzministerium.de/>; English press releases are infrequent"
+  - id: de-bundesbank
+    actor: DE
+    kind: central_bank
+    name: "Deutsche Bundesbank - Press releases"
+    homepage: https://www.bundesbank.de/en
+    method: rss
+    url: "https://www.bundesbank.de/service/rss/en/633306/feed.rss"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 10 items, newest 2026-11-06; includes routine securities-auction notices"
+
+  # ---------------- India
+  - id: in-pmo
+    actor: IN
+    kind: head_of_government
+    name: "Prime Minister of India"
+    homepage: https://www.pmindia.gov.in/en/
+    method: html
+    url: "https://www.pmindia.gov.in/en/news-updates/"
+    enabled: false
+    status: blocked
+    notes: "probed 2026-11-07: not working; 403 Akamai 'Access Denied' (also /en/feed/)"
+  - id: in-pib
+    actor: IN
+    kind: gov_press
+    name: "Press Information Bureau"
+    homepage: https://pib.gov.in/
+    method: rss
+    url: "https://www.pib.gov.in/RssMain.aspx?ModId=6&Lang=1&Regid=3"
+    enabled: false
+    status: blocked
+    notes: "probed 2026-11-07: not working; 403 Akamai 'Access Denied'"
+  - id: in-mea
+    actor: IN
+    kind: mfa
+    name: "Ministry of External Affairs"
+    homepage: https://www.mea.gov.in/
+    method: html
+    url: "https://www.mea.gov.in/press-releases"
+    enabled: false
+    status: js_only
+    notes: "probed 2026-11-07: not working; press-releases / speeches-statements / media-briefings listings are JS-populated; individual ?dtl/<id> pages are server-rendered; no RSS (rss.htm 404)"
+  - id: in-finmin
+    actor: IN
+    kind: finance
+    name: "Ministry of Finance"
+    homepage: https://finmin.gov.in/
+    method: html
+    url: "https://finmin.gov.in/"
+    enabled: false
+    status: blocked
+    notes: "probed 2026-11-07: not working; connection timeout"
+  - id: in-rbi
+    actor: IN
+    kind: central_bank
+    name: "Reserve Bank of India - Press Releases"
+    homepage: https://www.rbi.org.in/
+    method: rss
+    url: "https://www.rbi.org.in/pressreleases_rss.xml"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 10 items, newest 2026-11-06"
+
+  # ---------------- Brazil
+  - id: br-planalto
+    actor: BR
+    kind: head_of_government
+    name: "Planalto - Presidency of Brazil (English)"
+    homepage: https://www.gov.br/planalto/en
+    method: html
+    url: "https://www.gov.br/planalto/en/latest-news"
+    link_selector: "a[href]"
+    link_pattern: "/planalto/en/latest-news/\\d{4}/\\d{2}/.+"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 30 links, article text present (sentences=31 chars=6268); English output thin (1 item Nov, previous Sep, Jun)"
+  - id: br-mre
+    actor: BR
+    kind: mfa
+    name: "Ministry of Foreign Affairs (Itamaraty)"
+    homepage: https://www.gov.br/mre/en
+    method: html
+    url: "https://www.gov.br/mre/en/contact-us/press-area/press-releases"
+    link_selector: "a[href]"
+    link_pattern: "/press-areas?/press-releases/[a-z0-9-]{15,}$"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 29 links, article text present (sentences=17 chars=4006)"
+  - id: br-fazenda
+    actor: BR
+    kind: finance
+    name: "Ministry of Finance (Fazenda)"
+    homepage: https://www.gov.br/fazenda/en
+    method: html
+    url: "https://www.gov.br/fazenda/en"
+    enabled: false
+    status: no_english
+    notes: "probed 2026-11-07: not working; English section has no news listing (news only in Portuguese)"
+  - id: br-bcb
+    actor: BR
+    kind: central_bank
+    name: "Banco Central do Brasil"
+    homepage: https://www.bcb.gov.br/en
+    method: html
+    url: "https://www.bcb.gov.br/en/press/pressreleases"
+    enabled: false
+    status: js_only
+    notes: "probed 2026-11-07: not working; Angular SPA; no English RSS found"
+
+  # ---------------- South Africa
+  - id: za-presidency
+    actor: ZA
+    kind: head_of_government
+    name: "The Presidency of South Africa"
+    homepage: https://www.thepresidency.gov.za/
+    method: rss
+    url: "https://www.thepresidency.gov.za/rss.xml"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 10 items, newest 2026-11-07"
+  - id: za-gov
+    actor: ZA
+    kind: gov_press
+    name: "South African Government - Media statements"
+    homepage: https://www.gov.za/
+    method: html
+    url: "https://www.gov.za/news/media-statements"
+    link_selector: "a[href]"
+    link_pattern: "/news/media-statements/[a-z0-9-]{15,}$"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 20 links, article text present (sentences=12 chars=2293); gov.za/rss.xml also works but mixes in gazette notices"
+  - id: za-dirco
+    actor: ZA
+    kind: mfa
+    name: "Department of International Relations and Cooperation (DIRCO)"
+    homepage: https://dirco.gov.za/
+    method: html
+    url: "https://dirco.gov.za/media-statement/"
+    link_selector: "article a[href], h2 a[href], h3 a[href]"
+    link_pattern: "dirco\\.gov\\.za/[a-z0-9-]{30,}/$"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 499 links; first item (CHOGM communique) is a PDF-link page, second article checked: statement text present; page is large (~1.9MB) and lists hundreds of statements; some items (e.g. communiques) are only a link to a PDF"
+  - id: za-treasury
+    actor: ZA
+    kind: finance
+    name: "National Treasury"
+    homepage: https://www.treasury.gov.za/
+    method: html
+    url: "https://archive.treasury.gov.za/comm_media/press/2026/Default.aspx"
+    link_selector: "a[href]"
+    link_pattern: "/comm_media/press/2026/.+\\.pdf$"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 109 PDF links; PDF fetched OK (application/pdf) after percent-encoding spaces; statements are PDFs (needs PDF text extraction); hrefs contain literal spaces - percent-encode; listing URL contains the year - roll over each January"
+  - id: za-sarb
+    actor: ZA
+    kind: central_bank
+    name: "South African Reserve Bank"
+    homepage: https://www.resbank.co.za/
+    method: html
+    url: "https://www.resbank.co.za/en/home/publications/statements"
+    enabled: false
+    status: js_only
+    notes: "probed 2026-11-07: not working; statements/media-releases listings JS-rendered; no RSS found"
+
+  # ---------------- Türkiye
+  - id: tr-presidency
+    actor: TR
+    kind: head_of_government
+    name: "Presidency of the Republic of Türkiye"
+    homepage: https://www.tccb.gov.tr/en/
+    method: html
+    url: "https://www.tccb.gov.tr/en/news/"
+    enabled: false
+    status: blocked
+    notes: "probed 2026-11-07: not working; connection timeout (0 bytes) - likely geo/bot filtered"
+  - id: tr-mfa
+    actor: TR
+    kind: mfa
+    name: "Republic of Türkiye Ministry of Foreign Affairs"
+    homepage: https://www.mfa.gov.tr/default.en.mfa
+    method: html
+    url: "https://www.mfa.gov.tr/default.en.mfa"
+    link_selector: "a[href]"
+    link_pattern: "mfa\\.gov\\.tr/(no_-\\d+_-[^/]+|[^/]+-20\\d\\d[^/]*)\\.en\\.mfa$"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 15 links, article text present (sentences=3 chars=661); homepage lists latest numbered press releases + minister activities; dedicated press-release list page is JS-templated"
+  - id: tr-hmb
+    actor: TR
+    kind: finance
+    name: "Ministry of Treasury and Finance"
+    homepage: https://en.hmb.gov.tr/
+    method: html
+    url: "https://en.hmb.gov.tr/press-releases"
+    enabled: false
+    status: js_only
+    notes: "probed 2026-11-07: not working; 5KB JS shell"
+  - id: tr-tcmb
+    actor: TR
+    kind: central_bank
+    name: "Central Bank of the Republic of Türkiye"
+    homepage: https://www.tcmb.gov.tr/wps/wcm/connect/EN/TCMB+EN/Main+Menu
+    method: html
+    url: "https://www.tcmb.gov.tr/wps/wcm/connect/EN/TCMB+EN/Main+Menu/Announcements/Press+Releases"
+    enabled: false
+    status: js_only
+    notes: "probed 2026-11-07: not working; press release list not in raw HTML; no RSS found"
+
+  # ---------------- Iran
+  - id: ir-president
+    actor: IR
+    kind: head_of_government
+    name: "President of the Islamic Republic of Iran"
+    homepage: https://president.ir/en
+    method: html
+    url: "https://president.ir/en"
+    link_selector: "a[href]"
+    link_pattern: "president\\.ir/en/\\d+$"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 13 links, article text present (sentences=9 chars=2169)"
+  - id: ir-mfa
+    actor: IR
+    kind: mfa
+    name: "Ministry of Foreign Affairs of Iran"
+    homepage: https://en.mfa.ir/
+    method: html
+    url: "https://en.mfa.ir/portal/news"
+    enabled: false
+    status: blocked
+    notes: "probed 2026-11-07: not working; ArvanCloud cookie challenge (307 redirect loop setting __arcsco cookies); not bypassed"
+  - id: ir-cbi
+    actor: IR
+    kind: central_bank
+    name: "Central Bank of Iran"
+    homepage: https://www.cbi.ir/
+    method: html
+    url: "https://www.cbi.ir/news_en.aspx"
+    enabled: false
+    status: blocked
+    notes: "probed 2026-11-07: not working; 'درخواست رد شد' (request rejected) WAF page"
+
+  # ---------------- Israel
+  - id: il-pmo
+    actor: IL
+    kind: head_of_government
+    name: "Prime Minister's Office"
+    homepage: https://www.gov.il/en/departments/prime_ministers_office
+    method: html
+    url: "https://www.gov.il/en/departments/prime_ministers_office/govil-landing-page"
+    enabled: false
+    status: blocked
+    notes: "probed 2026-11-07: not working; 403 Cloudflare 'Attention Required' (all gov.il pages; pmo.gov.il redirects there)"
+  - id: il-mfa
+    actor: IL
+    kind: mfa
+    name: "Ministry of Foreign Affairs"
+    homepage: https://www.gov.il/en/departments/ministry_of_foreign_affairs
+    method: html
+    url: "https://www.gov.il/en/departments/ministry_of_foreign_affairs/govil-landing-page"
+    enabled: false
+    status: blocked
+    notes: "probed 2026-11-07: not working; 403 Cloudflare on gov.il"
+  - id: il-boi
+    actor: IL
+    kind: central_bank
+    name: "Bank of Israel"
+    homepage: https://www.boi.org.il/en/
+    method: html
+    url: "https://www.boi.org.il/en/communication-and-publications/press-releases/"
+    enabled: false
+    status: blocked
+    notes: "probed 2026-11-07: not working; Radware bot-manager page on every URL"
+
+  # ---------------- Saudi Arabia
+  - id: sa-mofa-statements
+    actor: SA
+    kind: mfa
+    name: "Ministry of Foreign Affairs - Statements"
+    homepage: https://www.mofa.gov.sa/en
+    method: html
+    url: "https://www.mofa.gov.sa/en/ministry/statements/Pages/default.aspx"
+    link_selector: "a[href]"
+    link_pattern: "/en/ministry/statements/Pages/(?!default)[^#]+\\.aspx$"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 50 links, article text present (sentences=18 chars=4169); English text but many URLs have Arabic slugs (percent-encode); pages carry Arabic gov banner"
+  - id: sa-mofa-news
+    actor: SA
+    kind: mfa
+    name: "Ministry of Foreign Affairs - News"
+    homepage: https://www.mofa.gov.sa/en
+    method: html
+    url: "https://www.mofa.gov.sa/en/ministry/news/Pages/default.aspx"
+    link_selector: "a[href]"
+    link_pattern: "/en/ministry/news/Pages/(?!default)[^#]+\\.aspx$"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 50 links, article text present (sentences=8 chars=2058); English text, Arabic URL slugs"
+  - id: sa-mof
+    actor: SA
+    kind: finance
+    name: "Ministry of Finance"
+    homepage: https://www.mof.gov.sa/en/
+    method: html
+    url: "https://www.mof.gov.sa/en/MediaCenter/news/Pages/default.aspx"
+    enabled: false
+    status: no_english
+    notes: "probed 2026-11-07: not working; English news URL redirects to Arabic /ar/news"
+  - id: sa-sama
+    actor: SA
+    kind: central_bank
+    name: "Saudi Central Bank (SAMA)"
+    homepage: https://www.sama.gov.sa/en-us/
+    method: html
+    url: "https://www.sama.gov.sa/en-us/news"
+    enabled: false
+    status: js_only
+    notes: "probed 2026-11-07: not working; news page has no statement links in raw HTML; old /Pages/ URLs 404"
+
+  # ---------------- Ukraine
+  - id: ua-president
+    actor: UA
+    kind: head_of_government
+    name: "President of Ukraine"
+    homepage: https://www.president.gov.ua/en
+    method: html
+    url: "https://www.president.gov.ua/en/news/all"
+    enabled: false
+    status: blocked
+    notes: "probed 2026-11-07: not working; 403 Akamai 'Access Denied' (also /en/rss)"
+  - id: ua-cabinet
+    actor: UA
+    kind: gov_press
+    name: "Cabinet of Ministers of Ukraine"
+    homepage: https://www.kmu.gov.ua/en
+    method: html
+    url: "https://www.kmu.gov.ua/en"
+    link_selector: "a[href]"
+    link_pattern: "/en/news/[a-z0-9-]{15,}$"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 24 links, article text present (sentences=8 chars=1285); PM/government news; /en/news redirects to Ukrainian timeline so use /en homepage; URLs transliterated Ukrainian, text English"
+  - id: ua-mfa
+    actor: UA
+    kind: mfa
+    name: "Ministry of Foreign Affairs of Ukraine"
+    homepage: https://mfa.gov.ua/en
+    method: html
+    url: "https://mfa.gov.ua/en/news"
+    enabled: false
+    status: blocked
+    notes: "probed 2026-11-07: not working; 403 Cloudflare 'Attention Required'"
+  - id: ua-mof
+    actor: UA
+    kind: finance
+    name: "Ministry of Finance of Ukraine"
+    homepage: https://mof.gov.ua/en
+    method: html
+    url: "https://mof.gov.ua/en/news"
+    enabled: false
+    status: blocked
+    notes: "probed 2026-11-07: not working; 403 Akamai 'Access Denied'"
+  - id: ua-nbu
+    actor: UA
+    kind: central_bank
+    name: "National Bank of Ukraine"
+    homepage: https://bank.gov.ua/en/
+    method: html
+    url: "https://bank.gov.ua/en/news/all"
+    link_selector: "a[href]"
+    link_pattern: "/en/news/all/[a-z0-9-]{15,}$"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 7 links, article text present (sentences=8 chars=2238); URLs transliterated Ukrainian, text English"
+
+  # ---------------- Japan
+  - id: jp-kantei
+    actor: JP
+    kind: head_of_government
+    name: "Prime Minister's Office of Japan (Kantei)"
+    homepage: https://japan.kantei.go.jp/
+    method: html
+    url: "https://japan.kantei.go.jp/index.html"
+    link_selector: "a[href]"
+    link_pattern: "japan\\.kantei\\.go\\.jp/\\d+/(actions|statement|discourse|press)/.+\\.html$"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 14 links, article text present (sentences=2 chars=570); English items short; Japanese RSS kantei.go.jp/index-jnews.rdf exists but is Japanese-only"
+  - id: jp-mofa
+    actor: JP
+    kind: mfa
+    name: "Ministry of Foreign Affairs of Japan"
+    homepage: https://www.mofa.go.jp/
+    method: html
+    url: "https://www.mofa.go.jp/press/release/index.html"
+    enabled: false
+    status: blocked
+    notes: "probed 2026-11-07: not working; 403 Akamai 'Access Denied' on all paths incl. RSS"
+  - id: jp-mof
+    actor: JP
+    kind: finance
+    name: "Ministry of Finance Japan"
+    homepage: https://www.mof.go.jp/english/
+    method: html
+    url: "https://www.mof.go.jp/english/"
+    link_selector: "a[href]"
+    link_pattern: "/english/policy/.+\\d{8,}.*\\.html$|/english/policy/.+/\\d{4}/.+\\.html$"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 4 links, article text present (sentences=4 chars=1042)"
+  - id: jp-boj
+    actor: JP
+    kind: central_bank
+    name: "Bank of Japan"
+    homepage: https://www.boj.or.jp/en/
+    method: rss
+    url: "https://www.boj.or.jp/en/rss/whatsnew.xml"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 48 items, newest 2026-11-07; includes statistical releases and PDFs"
+
+  # ---------------- United Nations
+  - id: un-press
+    actor: un
+    kind: org
+    name: "UN Meetings Coverage and Press Releases"
+    homepage: https://press.un.org/en
+    method: rss
+    url: "https://press.un.org/en/rss.xml"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 10 items, newest 2026-11-06; feed OK but article pages now return a Fastly 'Client Challenge' JS page (200, 3KB) - only RSS title+summary (~120-320 chars) retrievable"
+  - id: un-sg
+    actor: un
+    kind: org
+    name: "UN Secretary-General statements (press.un.org SG/SM)"
+    homepage: https://press.un.org/en/content/secretary-general
+    method: html
+    url: "https://press.un.org/en/content/secretary-general"
+    link_selector: "a[href]"
+    link_pattern: "/en/\\d{4}/sg[a-z]*\\d+\\.doc\\.htm$"
+    enabled: false
+    status: blocked
+    notes: "probed 2026-11-07: not working; listing works (10 SG/SM links) but article pages return Fastly 'Client Challenge' JS page (see un-press). un.org/sg/en/content/sg/statements returns 202 AWS-WAF challenge; un.org/sg/en/rss.xml stale (newest 2026-09-04)"
+
+  # ---------------- IMF
+  - id: imf-news
+    actor: imf
+    kind: org
+    name: "International Monetary Fund - News"
+    homepage: https://www.imf.org/en/news
+    method: html
+    url: "https://www.imf.org/en/News"
+    link_selector: "a[href]"
+    link_pattern: "/en/news/articles/\\d{4}/\\d{2}/\\d{2}/"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 14 links, article text present (sentences=29 chars=5056); RSS /en/News/rss gone (404); listing is a static snapshot whose newest item was 2026-10-07 (a month old) - check freshness; article pages expose markdown/JSON variants (index.md / index.json)"
+
+  # ---------------- World Bank
+  - id: world_bank-news
+    actor: world_bank
+    kind: org
+    name: "World Bank Group - News"
+    homepage: https://www.worldbank.org/ext/en/news
+    method: html
+    url: "https://www.worldbank.org/ext/en/news"
+    link_selector: "a[href]"
+    link_pattern: "worldbank\\.org/en/news/(press-release|statement|speech)/\\d{4}/\\d{2}/\\d{2}/"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 7 links, article text present (sentences=15 chars=2701); /en/news/all is JS; search API https://search.worldbank.org/api/v2/news?format=json works but is not RSS"
+
+  # ---------------- WHO
+  - id: who-statements
+    actor: who
+    kind: org
+    name: "World Health Organization - Statements"
+    homepage: https://www.who.int/news-room/statements
+    method: html
+    url: "https://www.who.int/news-room/statements"
+    link_selector: "a[href]"
+    link_pattern: "/news/item/\\d{2}-\\d{2}-\\d{4}-"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 10 links, article text present (sentences=11 chars=1421)"
+  - id: who-news-rss
+    actor: who
+    kind: org
+    name: "World Health Organization - News (RSS)"
+    homepage: https://www.who.int/news
+    method: rss
+    url: "https://www.who.int/rss-feeds/news-english.xml"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 83 items, newest 2026-10-10; feed unsorted and lags (newest item 2026-10-10)"
+
+  # ---------------- European Union
+  - id: eu-commission
+    actor: eu
+    kind: org
+    name: "European Commission - Press corner"
+    homepage: https://ec.europa.eu/commission/presscorner/home/en
+    method: rss
+    url: "https://ec.europa.eu/commission/presscorner/api/rss?language=en"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 10 items, newest 2026-11-06; only 10 items per fetch - poll frequently; gzip response makes curl --compressed fail (error 23) but Python gzip decodes it fine"
+  - id: eu-council
+    actor: eu
+    kind: org
+    name: "Council of the EU / European Council - Press releases"
+    homepage: https://www.consilium.europa.eu/en/press/
+    method: rss
+    url: "https://www.consilium.europa.eu/en/rss/pressreleases.ashx"
+    enabled: false
+    status: blocked
+    notes: "robots.txt disallows bots (2026-11-07), so we do not read it. Earlier: probed 2026-11-07: 200, 20 items, newest 2026-11-06; RSS works although HTML pages show 'Browser check' (403)"
+  - id: eu-eeas
+    actor: eu
+    kind: org
+    name: "European External Action Service - Press material"
+    homepage: https://www.eeas.europa.eu/
+    method: html
+    url: "https://www.eeas.europa.eu/eeas/press-material_en"
+    link_selector: "h3.card-title a"
+    link_pattern: "eeas\\.europa\\.eu/.+_en$"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 35 links, article text present (sentences=12 chars=2230); mixes HQ statements (/eeas/...) with delegation news (/delegations/...); faceted filter URLs return 403"
+
+  # ---------------- NATO
+  - id: nato-news
+    actor: nato
+    kind: org
+    name: "NATO - News"
+    homepage: https://www.nato.int/en
+    method: html
+    url: "https://www.nato.int/en"
+    link_selector: "a[href]"
+    link_pattern: "/en/news-and-events/articles/news/\\d{4}/\\d{2}/\\d{2}/"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 6 links, article text present (sentences=32 chars=5475); new site (2026): old /cps/ RSS gone; /en/news-and-events/articles/news listing is JS; homepage has latest news in raw HTML"
+
+  # ---------------- BRICS
+  - id: brics-chair
+    actor: brics
+    kind: org
+    name: "BRICS 2026 Chairship (India)"
+    homepage: https://www.brics2026.gov.in/
+    method: html
+    url: "https://www.brics2026.gov.in/press-releases/"
+    enabled: false
+    status: js_only
+    notes: "probed 2026-11-07: not working; chair rotates yearly (2026 India; previous brics.br no longer resolves); press-release list JS-rendered; /feed/ 403"
+
+  # ---------------- African Union
+  - id: au-press
+    actor: au
+    kind: org
+    name: "African Union - Press releases"
+    homepage: https://au.int/en
+    method: html
+    url: "https://au.int/en/happening/pressreleases"
+    link_selector: "a[href]"
+    link_pattern: "/en/pressreleases/\\d{8}/"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 12 links, article text present (sentences=10 chars=2473); au.int/en/rss.xml stale (newest 2026-06)"
+
+  # ---------------- ASEAN
+  - id: asean-news
+    actor: asean
+    kind: org
+    name: "ASEAN Secretariat"
+    homepage: https://asean.org/
+    method: rss
+    url: "https://asean.org/feed/"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 10 items, newest 2026-11-06; HTML pages return 307 JS redirect; WordPress feed works; article pages sit behind a Sucuri bot check (2026-11-07): titles only"
+
+  # ---------------- Arab League
+  - id: arab_league-news
+    actor: arab_league
+    kind: org
+    name: "League of Arab States"
+    homepage: http://www.lasportal.org/en/
+    method: html
+    url: "http://www.lasportal.org/en/news/Pages/default.aspx"
+    enabled: false
+    status: no_english
+    notes: "probed 2026-11-07: not working; English portal has only static institutional pages; news is Arabic-only"
+
+  # ---------------- GCC
+  - id: gcc-news
+    actor: gcc
+    kind: org
+    name: "Gulf Cooperation Council Secretariat"
+    homepage: https://www.gcc-sg.org/en
+    method: html
+    url: "https://www.gcc-sg.org/en/MediaCenter/Pages/default.aspx"
+    enabled: false
+    status: js_only
+    notes: "probed 2026-11-07: not working; media centre has no news links in raw HTML; old news URLs redirect to 404"
+
+  # ---------------- SCO
+  - id: sco-news
+    actor: sco
+    kind: org
+    name: "Shanghai Cooperation Organisation Secretariat"
+    homepage: https://eng.sectsco.org/
+    method: html
+    url: "https://eng.sectsco.org/news/"
+    link_selector: "a[href]"
+    link_pattern: "sectsco\\.org/\\d{8}/\\d+\\.html$"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 59 links, article text present (sentences=23 chars=5108); pattern also matches some static institutional pages (old dates in URL) - filter by URL date"
+
+  # ---------------- OIC
+  - id: oic-news
+    actor: oic
+    kind: org
+    name: "Organisation of Islamic Cooperation"
+    homepage: https://www.oic-oci.org/en
+    method: html
+    url: "https://www.oic-oci.org/en"
+    link_selector: "a[href]"
+    link_pattern: "/en/news/\\d+$"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 35 links, article text present (sentences=8 chars=1705)"
+
+  # ---------------- ECB
+  - id: ecb-press
+    actor: ecb
+    kind: central_bank
+    name: "European Central Bank - Press"
+    homepage: https://www.ecb.europa.eu/
+    method: rss
+    url: "https://www.ecb.europa.eu/rss/press.html"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 15 items, newest 2026-11-07; includes interviews, speeches, press releases"
+
+  # ---------------- BIS
+  - id: bis-speeches
+    actor: bis
+    kind: central_bank
+    name: "Bank for International Settlements - Management speeches"
+    homepage: https://www.bis.org/
+    method: rss
+    url: "https://www.bis.org/doclist/mgmtspeeches.rss"
+    enabled: true
+    status: ok
+    notes: "probed 2026-11-07: 200, 10 items, newest 2026-11-05"
+  - id: bis-press
+    actor: bis
+    kind: central_bank
+    name: "Bank for International Settlements - Press releases"
+    homepage: https://www.bis.org/media/news
+    method: rss
+    url: "https://www.bis.org/doclist/all_pressrels.rss"
+    enabled: false
+    status: not_found
+    notes: "probed 2026-11-07: not working; feed returns 200 but is empty (0 items); media/news HTML listing JS-rendered"

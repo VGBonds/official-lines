@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}{{ actor.name }}{% endblock %}
+{% block body %}
+<h1>{{ actor.name }}</h1>
+<p class="muted">{{ 'Country' if actor.is_country else 'International organisation' }}{% if actor.region %} · {{ actor.region }}{% endif %}</p>
+
+<h2 class="small">Sources we read</h2>
+<ul class="sources">
+  {% for s in sources %}
+  <li><a href="{{ s.homepage }}" rel="noopener" target="_blank">{{ s.name }}</a> <span class="muted small">{{ s.kind | replace('_', ' ') }}{% if not s.enabled %} · not collected ({{ s.status | replace('_', ' ') }}){% endif %}</span></li>
+  {% else %}
+  <li class="muted">No source yet. This is a coverage gap; see <a href="{{ root }}/coverage.html">Coverage</a>.</li>
+  {% endfor %}
+</ul>
+
+<h2>Recent statements</h2>
+<ul class="statements">
+  {% for s in statements %}
+  <li>
+    <a href="{{ s.url }}" rel="noopener" target="_blank">{{ s.title }}</a>
+    <span class="muted small">{{ (s.published_at or s.fetched_at) | date }}{% if s.slug %} · event: <a href="{{ root }}/event/{{ s.slug }}.html">{{ s.event_title }}</a>{% endif %}</span>
+    {% if s.summary %}<p class="summary">{{ s.summary }}</p>{% endif %}
+  </li>
+  {% else %}
+  <li class="muted">Nothing collected in the last 90 days.</li>
+  {% endfor %}
+</ul>
+{% endblock %}

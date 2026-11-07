@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Briefs{% endblock %}
+{% block body %}
+<h1>Weekly briefs</h1>
+<p>Where official narratives met and parted, week by week.</p>
+<ul class="statements">
+  {% for b in briefs %}<li><a href="briefs/{{ b }}.html">{{ b }}</a></li>
+  {% else %}<li class="muted">No brief published yet.</li>{% endfor %}
+</ul>
+{% endblock %}

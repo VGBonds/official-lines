@@ -1,0 +1,39 @@
+# Who Parallax follows. Sources (sources.yaml) point to one of these actors.
+#
+# countries: keyed by ISO 3166-1 alpha-2. iso_numeric is used to colour the world map.
+# orgs: international and regional organisations. They NEVER colour a country on the map,
+#       not even the country hosting their headquarters.
+
+countries:
+  US: {name: United States, iso_numeric: "840", region: Americas}
+  BR: {name: Brazil, iso_numeric: "076", region: Americas}
+  GB: {name: United Kingdom, iso_numeric: "826", region: Europe}
+  FR: {name: France, iso_numeric: "250", region: Europe}
+  DE: {name: Germany, iso_numeric: "276", region: Europe}
+  UA: {name: Ukraine, iso_numeric: "804", region: Europe}
+  RU: {name: Russia, iso_numeric: "643", region: Europe/Asia}
+  TR: {name: Türkiye, iso_numeric: "792", region: Europe/Asia}
+  IL: {name: Israel, iso_numeric: "376", region: Middle East}
+  IR: {name: Iran, iso_numeric: "364", region: Middle East}
+  SA: {name: Saudi Arabia, iso_numeric: "682", region: Middle East}
+  ZA: {name: South Africa, iso_numeric: "710", region: Africa}
+  IN: {name: India, iso_numeric: "356", region: Asia}
+  CN: {name: China, iso_numeric: "156", region: Asia}
+  JP: {name: Japan, iso_numeric: "392", region: Asia}
+
+orgs:
+  un: {name: United Nations, scope: global}
+  imf: {name: International Monetary Fund, scope: global}
+  world_bank: {name: World Bank, scope: global}
+  who: {name: World Health Organization, scope: global}
+  bis: {name: Bank for International Settlements, scope: global}
+  eu: {name: European Union, scope: regional}
+  ecb: {name: European Central Bank, scope: regional}
+  nato: {name: NATO, scope: regional}
+  brics: {name: BRICS, scope: bloc}
+  sco: {name: Shanghai Cooperation Organisation, scope: regional}
+  au: {name: African Union, scope: regional}
+  asean: {name: ASEAN, scope: regional}
+  arab_league: {name: League of Arab States, scope: regional}
+  gcc: {name: Gulf Cooperation Council, scope: regional}
+  oic: {name: Organisation of Islamic Cooperation, scope: regional}

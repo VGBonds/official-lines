@@ -1,0 +1,160 @@
+"""Generate the public website as plain static HTML files.
+
+The site shows titles, dates, links to the original, our own neutral summaries and short
+quotes (max ~30 words). It never republishes the full text of a statement.
+"""
+
+import shutil
+import sqlite3
+from collections import Counter, defaultdict
+from datetime import UTC, datetime, timedelta
+from pathlib import Path
+
+import markdown
+from jinja2 import Environment, FileSystemLoader, select_autoescape
+
+from parallax.catalog import Catalog, on_map
+from parallax.config import PROJECT_ROOT
+from parallax.db import loads
+
+HERE = Path(__file__).parent
+INDEX_DAYS = 45
+ACTOR_DAYS = 90
+STANCE_SYMBOL = {"asserts": "●", "qualifies": "◐", "denies": "○"}
+
+
+def build_site(conn: sqlite3.Connection, catalog: Catalog, out: Path, site_url: str,
+               briefs_dir: Path) -> int:
+    env = Environment(loader=FileSystemLoader(HERE / "templates"),
+                      autoescape=select_autoescape(["html"]))
+    env.globals.update(site_url=site_url, actors=catalog.actors,
+                       built_at=datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC"),
+                       stance_symbol=STANCE_SYMBOL)
+    env.filters["date"] = lambda v: (v or "")[:10]
+
+    if out.exists():
+        shutil.rmtree(out)
+    (out / "event").mkdir(parents=True)
+    (out / "actor").mkdir()
+    (out / "briefs").mkdir()
+    shutil.copytree(HERE / "static", out / "static")
+
+    events = load_events(conn, catalog)
+    pages = 0
+    for e in events:
+        _write(out / "event" / f"{e['slug']}.html",
+               env.get_template("event.html").render(e=e, root=".."))
+        pages += 1
+
+    since = (datetime.now(UTC) - timedelta(days=INDEX_DAYS)).isoformat()
+    recent = [e for e in events if (e["last_seen"] or "") >= since]
+    activity = Counter(a for e in recent for a in e["map_iso"])
+    _write(out / "index.html", env.get_template("index.html").render(
+        events=recent, activity=dict(activity), root="."))
+
+    for actor_id, actor in catalog.actors.items():
+        statements = actor_statements(conn, actor_id)
+        _write(out / "actor" / f"{actor_id}.html", env.get_template("actor.html").render(
+            actor=actor, statements=statements,
+            sources=[s for s in catalog.sources if s.actor == actor_id], root=".."))
+        pages += 1
+
+    _write(out / "coverage.html", env.get_template("coverage.html").render(
+        rows=coverage(conn, catalog), root="."))
+    method = markdown.markdown((PROJECT_ROOT / "docs" / "methodology.md").read_text(),
+                               extensions=["tables"])
+    _write(out / "method.html", env.get_template("page.html").render(
+        title="Method", body=method, root="."))
+
+    briefs = []
+    for path in sorted(briefs_dir.glob("*.md"), reverse=True) if briefs_dir.exists() else []:
+        html = markdown.markdown(path.read_text(), extensions=["tables"])
+        _write(out / "briefs" / f"{path.stem}.html", env.get_template("page.html").render(
+            title=path.stem, body=html, root=".."))
+        briefs.append(path.stem)
+    _write(out / "briefs.html", env.get_template("briefs.html").render(briefs=briefs, root="."))
+    return pages + 4 + len(briefs)
+
+
+def _write(path: Path, html: str) -> None:
+    path.write_text(html, encoding="utf-8")
+
+
+def load_events(conn: sqlite3.Connection, catalog: Catalog) -> list[dict]:
+    by_event: dict[int, list[dict]] = defaultdict(list)
+    for s in conn.execute(
+        "SELECT * FROM statements WHERE event_id IS NOT NULL"
+        " ORDER BY COALESCE(published_at, fetched_at)"
+    ):
+        ex = loads(s["extraction"]) or {}
+        by_event[s["event_id"]].append({
+            "id": s["id"], "actor": s["actor"], "kind": s["kind"], "url": s["url"],
+            "title": s["title"], "date": s["published_at"] or s["fetched_at"],
+            "summary": ex.get("summary", ""), "claims": ex.get("claims", []),
+        })
+
+    events = []
+    for row in conn.execute("SELECT * FROM events ORDER BY featured DESC, last_seen DESC"):
+        statements = by_event.get(row["id"], [])
+        if not statements:
+            continue
+        actor_ids = list(dict.fromkeys(s["actor"] for s in statements))
+        e = dict(row)
+        e["statements"] = statements
+        e["by_actor"] = {a: [s for s in statements if s["actor"] == a] for a in actor_ids}
+        e["countries"] = [a for a in actor_ids if catalog.actor(a).is_country]
+        e["orgs"] = [a for a in actor_ids if not catalog.actor(a).is_country]
+        e["map_iso"] = sorted({catalog.actor(s["actor"]).iso_numeric for s in statements
+                               if on_map(catalog.actor(s["actor"]), s["kind"])})
+        e["analysis"] = loads(row["analysis"])
+        if e["analysis"]:
+            e["matrix"] = stance_matrix(e["analysis"], actor_ids)
+        events.append(e)
+    return events
+
+
+def stance_matrix(analysis: dict, actor_ids: list[str]) -> dict:
+    """Rows = propositions, columns = actors that took any stance; cells = stance + quote."""
+    cells: dict[tuple[str, str], dict] = {}
+    for p in analysis["llm"]["positions"]:
+        if p["actor"] in actor_ids:
+            cells.setdefault((p["proposition_id"], p["actor"]), p)
+    table = analysis["metrics"]["stance_table"]
+    columns = [a for a in actor_ids if table.get(a)]
+    rows = []
+    for prop in analysis["llm"]["propositions"]:
+        rows.append({
+            "prop": prop,
+            "floor": prop["id"] in analysis["metrics"]["shared_floor"],
+            "contested": prop["id"] in analysis["metrics"]["contested"],
+            "cells": [
+                {"stance": table.get(a, {}).get(prop["id"]),
+                 "quote": cells.get((prop["id"], a), {}).get("quote", "")}
+                for a in columns
+            ],
+        })
+    return {"columns": columns, "rows": rows}
+
+
+def actor_statements(conn: sqlite3.Connection, actor_id: str) -> list[dict]:
+    since = (datetime.now(UTC) - timedelta(days=ACTOR_DAYS)).isoformat()
+    rows = conn.execute(
+        """SELECT s.*, e.slug, e.title AS event_title FROM statements s
+           LEFT JOIN events e ON e.id = s.event_id
+           WHERE s.actor = ? AND COALESCE(s.published_at, s.fetched_at) >= ?
+           ORDER BY COALESCE(s.published_at, s.fetched_at) DESC LIMIT 200""",
+        (actor_id, since),
+    ).fetchall()
+    return [{**dict(r), "summary": (loads(r["extraction"]) or {}).get("summary", "")}
+            for r in rows]
+
+
+def coverage(conn: sqlite3.Connection, catalog: Catalog) -> list[dict]:
+    health = {r["id"]: dict(r) for r in conn.execute("SELECT * FROM sources")}
+    counts = dict(conn.execute("SELECT source_id, COUNT(*) FROM statements GROUP BY source_id"))
+    rows = []
+    for s in catalog.sources:
+        h = health.get(s.id, {})
+        rows.append({"source": s, "statements": counts.get(s.id, 0),
+                     "last_ok_at": h.get("last_ok_at"), "last_error": h.get("last_error")})
+    return rows
