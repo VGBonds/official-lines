@@ -74,6 +74,6 @@ def get_settings() -> Settings:
         max_new_items_per_source=int(env("PARALLAX_MAX_NEW_ITEMS_PER_SOURCE", "15")),
         user_agent=env(
             "PARALLAX_USER_AGENT",
-            "Mozilla/5.0 (compatible; ParallaxBot/0.1; research; +https://github.com/parallax-official-lines)",
+            "Mozilla/5.0 (compatible; ParallaxBot/0.1; research; +https://github.com/VGBonds/parallax)",
         ),
     )
