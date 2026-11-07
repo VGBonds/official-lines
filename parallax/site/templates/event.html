@@ -4,9 +4,16 @@
 {% block body %}
 {% set a = e.analysis %}
 <article class="event-page">
-  <p class="muted small">{{ e.first_seen | date }}{% if e.last_seen and e.last_seen[:10] != e.first_seen[:10] %} – {{ e.last_seen | date }}{% endif %} · {{ e.statements | length }} statements · {{ (e.countries + e.orgs) | length }} actors</p>
+  <p class="muted small">{{ e.first_seen | date }}{% if e.last_seen and e.last_seen[:10] != e.first_seen[:10] %} – {{ e.last_seen | date }}{% endif %} · {{ e.statement_count }} statements · {{ (e.countries + e.orgs) | length }} actors</p>
   <h1>{{ e.title }}</h1>
-  {% if e.summary %}<p class="lead">{{ e.summary }}</p>{% endif %}
+  {% if e.background %}
+  <section class="background">
+    <h2 class="small">Background</h2>
+    <p class="lead">{{ e.background }}</p>
+    <p class="muted small">Compiled by AI only from the official statements below, not from other sources. Facts no source disputes are stated plainly; everything else is attributed. <a href="{{ root }}/method.html">How this works</a>.</p>
+  </section>
+  {% if e.summary %}<h2 class="small">How the official lines relate</h2><p>{{ e.summary }}</p>{% endif %}
+  {% elif e.summary %}<p class="lead">{{ e.summary }}</p>{% endif %}
 
   <div class="grid-2">
     <div>{{ m.map(e.map_iso, root) }}</div>
@@ -80,7 +87,7 @@
       {% for s in items %}
       <li>
         <a href="{{ s.url }}" rel="noopener" target="_blank">{{ s.title }}</a>
-        <span class="muted small">{{ s.date | date }} · {{ s.kind | replace('_', ' ') }}</span>
+        <span class="muted small">{{ s.date | date }} · {{ s.kind | replace('_', ' ') }}{% if s.of_several %} · one of several topics in this statement{% endif %}</span>
         {% if s.summary %}<p class="summary">{{ s.summary }}</p>{% endif %}
       </li>
       {% endfor %}

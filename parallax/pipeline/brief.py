@@ -22,7 +22,7 @@ def pick_events(conn: sqlite3.Connection, days: int) -> list[sqlite3.Row]:
     since = (datetime.now(UTC) - timedelta(days=days)).isoformat()
     rows = conn.execute(
         """SELECT e.*, COUNT(DISTINCT s.actor) AS actors FROM events e
-           JOIN statements s ON s.event_id = e.id
+           JOIN parts p ON p.event_id = e.id JOIN statements s ON s.id = p.statement_id
            WHERE e.analysis IS NOT NULL AND e.last_seen >= ? GROUP BY e.id""",
         (since,),
     ).fetchall()

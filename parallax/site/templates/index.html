@@ -27,12 +27,12 @@
 {% for e in events %}
   <li class="event{% if e.featured %} featured{% endif %}"
       data-domain="{{ e.domain or '' }}" data-actors="{{ (e.countries + e.orgs) | length }}"
-      data-text="{{ (e.title ~ ' ' ~ (e.summary or '') ~ ' ' ~ ((e.countries + e.orgs) | map('lower') | join(' '))) | lower }}">
+      data-text="{{ (e.title ~ ' ' ~ (e.background or '') ~ ' ' ~ (e.summary or '') ~ ' ' ~ ((e.countries + e.orgs) | map('lower') | join(' '))) | lower }}">
     <div class="event-head">
       <a class="event-title" href="event/{{ e.slug }}.html">{{ e.title }}</a>
       <span class="muted small">{{ e.first_seen | date }}{% if e.last_seen and e.last_seen[:10] != e.first_seen[:10] %} – {{ e.last_seen | date }}{% endif %}</span>
     </div>
-    {% if e.summary %}<p class="summary">{{ e.summary }}</p>{% endif %}
+    {% if e.background or e.summary %}<p class="summary">{{ e.background or e.summary }}</p>{% endif %}
     <div class="chips">
       {% for a in e.countries + e.orgs %}{{ m.chip(a, root) }}{% endfor %}
       {% if e.analysis %}<span class="badge">compared</span>{% if e.analysis.metrics.contested %}<span class="badge">{{ e.analysis.metrics.contested | length }} contested</span>{% endif %}{% endif %}

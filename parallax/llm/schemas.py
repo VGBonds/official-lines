@@ -24,6 +24,24 @@ class KeyTerm(BaseModel):
     refers_to: str = Field(description="Neutral description of what the term refers to.")
 
 
+class IssuePart(BaseModel):
+    issue: str = Field(
+        description="Short noun phrase naming the specific development this passage is about, "
+        "e.g. 'Fed November 2026 rate decision' or 'Strike on X port, 3 Nov 2026'."
+    )
+    opening: str = Field(
+        description="The first 6-12 words of the passage on this issue, copied exactly from the "
+        "text, so that the passage can be found again."
+    )
+    summary: str = Field(description="One or two neutral sentences: who says what about what.")
+    topics: list[str] = Field(description="2-5 short lowercase topic tags.")
+    places: list[str]
+    claims: list[Claim] = Field(description="Up to 6 central claims on this issue.")
+    key_terms: list[KeyTerm] = Field(
+        description="Up to 5 loaded or distinctive terms the source uses for actors or events."
+    )
+
+
 class StatementExtraction(BaseModel):
     relevant: bool = Field(
         description="True if this states a position, decision, assessment or account of events. "
@@ -31,23 +49,19 @@ class StatementExtraction(BaseModel):
         "routine consular travel-advice updates and ceremonial greetings without political content."
     )
     domain: Domain
-    summary: str = Field(description="One or two neutral sentences: who says what about what.")
-    issue: str = Field(
-        description="Short noun phrase naming the specific incident or issue, e.g. "
-        "'Fed November 2026 rate decision' or 'Strike on X port, 3 Nov 2026'."
-    )
-    topics: list[str] = Field(description="2-5 short lowercase topic tags.")
-    places: list[str]
-    claims: list[Claim] = Field(description="Up to 6 central claims.")
-    key_terms: list[KeyTerm] = Field(
-        description="Up to 5 loaded or distinctive terms the source uses for actors or events."
+    summary: str = Field(description="One or two neutral sentences on the whole statement.")
+    parts: list[IssuePart] = Field(
+        description="One part per distinct issue, in the order they appear. Most statements "
+        "address one issue and have exactly one part. Press briefings, question-and-answer "
+        "sessions and speeches that cover several issues get one part per issue (at most 15). "
+        "Leave out purely procedural or ceremonial passages. Empty if not relevant."
     )
 
 
 # --- Step 2: grouping statements into events ---------------------------------------------------
 
 class Assignment(BaseModel):
-    statement_id: int
+    part_id: int
     event: str = Field(
         description="Either the id of an existing event (e.g. 'E12'), "
         "or a new key 'new:<short-key>'. Statements that share a new key form one new event."
@@ -63,6 +77,15 @@ class NewEvent(BaseModel):
 class Grouping(BaseModel):
     assignments: list[Assignment]
     new_events: list[NewEvent]
+
+
+class Merge(BaseModel):
+    keep: int = Field(description="Id of the event to keep.")
+    merge: list[int] = Field(description="Ids of duplicate events to fold into it.")
+
+
+class Merges(BaseModel):
+    merges: list[Merge]
 
 
 # --- Step 3: analysing one event ---------------------------------------------------------------
@@ -97,11 +120,19 @@ class Framing(BaseModel):
 
 class EventAnalysis(BaseModel):
     title: str = Field(description="Neutral, factual event title.")
-    summary: str = Field(
-        description="2-3 neutral sentences describing what the statements are about, "
-        "attributing every contested point to who says it."
+    background: str = Field(
+        description="2-4 plain sentences for a newcomer: what happened, who, when, where. "
+        "Only from the given statements; undisputed facts stated plainly, everything else "
+        "attributed to its source."
     )
-    propositions: list[Proposition] = Field(description="3-10 propositions, most contested first.")
+    summary: str = Field(
+        description="2-3 neutral sentences on how the official lines relate, "
+        "attributing every point to who says it."
+    )
+    propositions: list[Proposition] = Field(
+        description="3-10 propositions phrased so that different sides can take a stance on "
+        "the same one; most contested first."
+    )
     positions: list[Position] = Field(
         description="Only where a source clearly asserts, denies or qualifies. Omit otherwise."
     )

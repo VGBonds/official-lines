@@ -21,7 +21,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--source", help="only this source id")
     p = sub.add_parser("extract", help="LLM step 1: read new statements")
     p.add_argument("--limit", type=int)
-    sub.add_parser("group", help="LLM step 2: group statements into events")
+    sub.add_parser("group", help="LLM step 2: group statement parts into events")
     p = sub.add_parser("analyze", help="LLM step 3: compare actors on multi-actor events")
     p.add_argument("--event", help="analyse this event slug now (ignores the daily cap)")
     sub.add_parser("build", help="generate the static website")
@@ -90,9 +90,11 @@ def cmd_extract(args, settings, catalog, conn):
 
 
 def cmd_group(args, settings, catalog, conn):
-    from parallax.pipeline.events import group_pending
-    n = group_pending(conn, catalog, _llm(settings, conn), settings.extract_model)
-    print(f"grouped {n} statements into events")
+    from parallax.pipeline.events import group_pending, merge_duplicates
+    llm = _llm(settings, conn)
+    n = group_pending(conn, catalog, llm, settings.extract_model)
+    merged = merge_duplicates(conn, llm, settings.extract_model)
+    print(f"grouped {n} statement parts into events; merged {merged} duplicate events")
 
 
 def cmd_analyze(args, settings, catalog, conn):

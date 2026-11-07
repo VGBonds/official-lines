@@ -48,7 +48,7 @@ New to all of this? Start with **[docs/getting-started.md](docs/getting-started.
 | `uv run parallax sources` | List all sources and whether their last fetch worked |
 | `uv run parallax collect` | Fetch new statements (`--source ID` for just one) |
 | `uv run parallax extract` | AI step 1: read new statements |
-| `uv run parallax group` | AI step 2: group statements into events |
+| `uv run parallax group` | AI step 2: group statement parts (one issue each) into events |
 | `uv run parallax analyze` | AI step 3: compare actors on events (`--event SLUG` for one) |
 | `uv run parallax build` | Generate the website into `site/` |
 | `uv run parallax run` | All of the above, in order (this is what the server runs every 3 hours) |

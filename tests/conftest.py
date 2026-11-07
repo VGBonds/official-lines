@@ -11,6 +11,7 @@ from parallax.llm.schemas import (
     EventAnalysis,
     Framing,
     Grouping,
+    IssuePart,
     KeyTerm,
     NewEvent,
     Position,
@@ -33,8 +34,29 @@ def conn(tmp_path):
     return connect(tmp_path / "test.db")
 
 
+def strait_part(opening="", quote="a ship was stopped"):
+    return IssuePart(
+        issue="Strait incident", opening=opening,
+        summary="The source comments on the strait incident.",
+        topics=["shipping", "strait"], places=["Strait"],
+        claims=[Claim(text="A ship was stopped.", quote=quote, type="fact")],
+        key_terms=[KeyTerm(term="incident", refers_to="the stopping of a ship")],
+    )
+
+
+def trade_part():
+    return IssuePart(
+        issue="Trade talks", opening="Q: On trade talks.", summary="Talks will continue.",
+        topics=["trade"], places=[],
+        claims=[Claim(text="Talks were constructive.", quote="the talks were constructive",
+                      type="position")],
+        key_terms=[],
+    )
+
+
 class FakeLLM:
-    """Stands in for the API. Everything is put in one event; each actor gets a stance."""
+    """Stands in for the API. Parts are grouped by their issue; each actor gets a stance.
+    A 'press conference' is split into two parts: the strait and trade talks."""
 
     def __init__(self):
         self.calls = []
@@ -42,20 +64,21 @@ class FakeLLM:
     def structured(self, *, purpose, model, system, user, schema, max_tokens, effort):
         self.calls.append(purpose)
         if schema is StatementExtraction:
-            return StatementExtraction(
-                relevant="vacancy" not in user.lower(), domain="politics",
-                summary="The source comments on the strait incident.",
-                issue="Strait incident", topics=["shipping", "strait"], places=["Strait"],
-                claims=[Claim(text="A ship was stopped.", quote="a ship was stopped",
-                              type="fact")],
-                key_terms=[KeyTerm(term="incident", refers_to="the stopping of a ship")],
-            )
+            relevant = "vacancy" not in user.lower()
+            if "press conference" in user.lower():
+                parts = [strait_part("Q: On the strait.", "maximum restraint"), trade_part()]
+            else:
+                parts = [strait_part()]
+            return StatementExtraction(relevant=relevant, domain="politics",
+                                       summary="The source comments.",
+                                       parts=parts if relevant else [])
         if schema is Grouping:
-            ids = [int(i) for i in re.findall(r"^\[(\d+)\]", user, flags=re.M)]
+            found = re.findall(r"^\[(\d+)\].*\n\s+issue: (.+)$", user, flags=re.M)
+            keys = {issue: "new:" + issue.lower().replace(" ", "-") for _, issue in found}
             return Grouping(
-                assignments=[Assignment(statement_id=i, event="new:strait") for i in ids],
-                new_events=[NewEvent(key="new:strait", title="Strait incident",
-                                     summary="A ship was stopped in the strait.")],
+                assignments=[Assignment(part_id=int(i), event=keys[issue]) for i, issue in found],
+                new_events=[NewEvent(key=k, title=issue, summary=f"About the {issue.lower()}.")
+                            for issue, k in keys.items()],
             )
         if schema is EventAnalysis:
             actors = sorted(set(re.findall(r"actor=(\w+)", user)))
@@ -70,6 +93,7 @@ class FakeLLM:
                                    quote="a violation", statement_id=ids[a]) for a in actors[1:]]
             return EventAnalysis(
                 title="Strait incident", summary="Several actors commented.",
+                background="A ship was stopped in the strait on 1 November.",
                 propositions=[Proposition(id="p1", text="A ship was stopped."),
                               Proposition(id="p2", text="The stop violated maritime law.")],
                 positions=positions,

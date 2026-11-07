@@ -16,6 +16,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from parallax.catalog import Catalog, on_map
 from parallax.config import PROJECT_ROOT
 from parallax.db import loads
+from parallax.pipeline.events import PART_COLUMNS
 
 HERE = Path(__file__).parent
 INDEX_DAYS = 45
@@ -82,15 +83,15 @@ def _write(path: Path, html: str) -> None:
 
 def load_events(conn: sqlite3.Connection, catalog: Catalog) -> list[dict]:
     by_event: dict[int, list[dict]] = defaultdict(list)
-    for s in conn.execute(
-        "SELECT * FROM statements WHERE event_id IS NOT NULL"
-        " ORDER BY COALESCE(published_at, fetched_at)"
+    for p in conn.execute(
+        f"SELECT {PART_COLUMNS} FROM parts p JOIN statements s ON s.id = p.statement_id"
+        " WHERE p.event_id IS NOT NULL ORDER BY date, p.idx"
     ):
-        ex = loads(s["extraction"]) or {}
-        by_event[s["event_id"]].append({
-            "id": s["id"], "actor": s["actor"], "kind": s["kind"], "url": s["url"],
-            "title": s["title"], "date": s["published_at"] or s["fetched_at"],
-            "summary": ex.get("summary", ""), "claims": ex.get("claims", []),
+        by_event[p["event_id"]].append({
+            "id": p["statement_id"], "actor": p["actor"], "kind": p["kind"], "url": p["url"],
+            "title": p["title"], "date": p["date"], "summary": p["summary"] or "",
+            "claims": (loads(p["data"]) or {}).get("claims", []),
+            "of_several": p["n_parts"] > 1,
         })
 
     events = []
@@ -101,12 +102,14 @@ def load_events(conn: sqlite3.Connection, catalog: Catalog) -> list[dict]:
         actor_ids = list(dict.fromkeys(s["actor"] for s in statements))
         e = dict(row)
         e["statements"] = statements
+        e["statement_count"] = len({s["id"] for s in statements})
         e["by_actor"] = {a: [s for s in statements if s["actor"] == a] for a in actor_ids}
         e["countries"] = [a for a in actor_ids if catalog.actor(a).is_country]
         e["orgs"] = [a for a in actor_ids if not catalog.actor(a).is_country]
         e["map_iso"] = sorted({catalog.actor(s["actor"]).iso_numeric for s in statements
                                if on_map(catalog.actor(s["actor"]), s["kind"])})
         e["analysis"] = loads(row["analysis"])
+        e["background"] = (e["analysis"] or {}).get("llm", {}).get("background", "")
         if e["analysis"]:
             e["matrix"] = stance_matrix(e["analysis"], actor_ids)
         events.append(e)
@@ -139,14 +142,20 @@ def stance_matrix(analysis: dict, actor_ids: list[str]) -> dict:
 def actor_statements(conn: sqlite3.Connection, actor_id: str) -> list[dict]:
     since = (datetime.now(UTC) - timedelta(days=ACTOR_DAYS)).isoformat()
     rows = conn.execute(
-        """SELECT s.*, e.slug, e.title AS event_title FROM statements s
-           LEFT JOIN events e ON e.id = s.event_id
-           WHERE s.actor = ? AND COALESCE(s.published_at, s.fetched_at) >= ?
-           ORDER BY COALESCE(s.published_at, s.fetched_at) DESC LIMIT 200""",
+        """SELECT * FROM statements
+           WHERE actor = ? AND COALESCE(published_at, fetched_at) >= ?
+           ORDER BY COALESCE(published_at, fetched_at) DESC LIMIT 200""",
         (actor_id, since),
     ).fetchall()
-    return [{**dict(r), "summary": (loads(r["extraction"]) or {}).get("summary", "")}
-            for r in rows]
+    events: dict[int, list[dict]] = defaultdict(list)  # a briefing can feed several events
+    for r in conn.execute(
+        """SELECT DISTINCT p.statement_id, e.slug, e.title FROM parts p
+           JOIN events e ON e.id = p.event_id JOIN statements s ON s.id = p.statement_id
+           WHERE s.actor = ? ORDER BY p.statement_id, p.idx""", (actor_id,),
+    ):
+        events[r["statement_id"]].append({"slug": r["slug"], "title": r["title"]})
+    return [{**dict(r), "summary": (loads(r["extraction"]) or {}).get("summary", ""),
+             "events": events.get(r["id"], [])} for r in rows]
 
 
 def coverage(conn: sqlite3.Connection, catalog: Catalog) -> list[dict]:

@@ -18,7 +18,7 @@
   {% for s in statements %}
   <li>
     <a href="{{ s.url }}" rel="noopener" target="_blank">{{ s.title }}</a>
-    <span class="muted small">{{ (s.published_at or s.fetched_at) | date }}{% if s.slug %} · event: <a href="{{ root }}/event/{{ s.slug }}.html">{{ s.event_title }}</a>{% endif %}</span>
+    <span class="muted small">{{ (s.published_at or s.fetched_at) | date }}{% if s.events %} · {{ 'event' if s.events | length == 1 else 'events' }}: {% for ev in s.events %}<a href="{{ root }}/event/{{ ev.slug }}.html">{{ ev.title }}</a>{{ '; ' if not loop.last }}{% endfor %}{% endif %}</span>
     {% if s.summary %}<p class="summary">{{ s.summary }}</p>{% endif %}
   </li>
   {% else %}

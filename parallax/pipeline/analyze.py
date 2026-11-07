@@ -1,5 +1,8 @@
 """Step 3: compare what different actors said about one event.
 
+The input is the parts (one issue each) filed under the event: for each, the extracted
+claims and the passage of the original text it comes from.
+
 Only events where at least MIN_ACTORS different actors spoke are analysed, at most once a
 day each, and at most `max_per_day` analyses a day in total. This keeps cost predictable.
 """
@@ -17,11 +20,12 @@ from parallax.llm import prompts
 from parallax.llm.client import LLM, LLMError
 from parallax.llm.schemas import EventAnalysis
 from parallax.pipeline import metrics
+from parallax.pipeline.events import PART_COLUMNS
 
 log = logging.getLogger(__name__)
 
 MIN_ACTORS = 2
-MAX_STATEMENTS_PER_ACTOR = 3
+MAX_PARTS_PER_ACTOR = 3
 TEXT_EXCERPT_CHARS = 3000
 REANALYSE_AFTER_HOURS = 20
 SILENCE_LOOKBACK_DAYS = 60
@@ -39,8 +43,9 @@ def analyses_today(conn: sqlite3.Connection) -> int:
 def events_due(conn: sqlite3.Connection, limit: int) -> list[sqlite3.Row]:
     cutoff = (datetime.now(UTC) - timedelta(hours=REANALYSE_AFTER_HOURS)).isoformat()
     return conn.execute(
-        """SELECT e.*, COUNT(DISTINCT s.actor) AS actors, COUNT(s.id) AS n
-           FROM events e JOIN statements s ON s.event_id = e.id
+        """SELECT e.*, COUNT(DISTINCT s.actor) AS actors, COUNT(p.id) AS n
+           FROM events e JOIN parts p ON p.event_id = e.id
+                JOIN statements s ON s.id = p.statement_id
            GROUP BY e.id
            HAVING actors >= ? AND n > e.analysed_statement_count
               AND (e.analysed_at IS NULL OR e.analysed_at < ?)
@@ -69,15 +74,15 @@ def analyze_due(conn: sqlite3.Connection, catalog: Catalog, llm: LLM, model: str
     return done
 
 
-def select_statements(conn: sqlite3.Connection, event_id: int) -> list[sqlite3.Row]:
+def select_parts(conn: sqlite3.Connection, event_id: int) -> list[sqlite3.Row]:
     rows = conn.execute(
-        "SELECT * FROM statements WHERE event_id=? ORDER BY COALESCE(published_at, fetched_at)"
-        " DESC", (event_id,),
+        f"""SELECT {PART_COLUMNS} FROM parts p JOIN statements s ON s.id = p.statement_id
+            WHERE p.event_id=? ORDER BY date DESC""", (event_id,),
     ).fetchall()
     per_actor: Counter = Counter()
     kept = []
     for r in rows:  # newest first, a few per actor so no single voice dominates the input
-        if per_actor[r["actor"]] < MAX_STATEMENTS_PER_ACTOR:
+        if per_actor[r["actor"]] < MAX_PARTS_PER_ACTOR:
             per_actor[r["actor"]] += 1
             kept.append(r)
     return list(reversed(kept))
@@ -85,22 +90,22 @@ def select_statements(conn: sqlite3.Connection, event_id: int) -> list[sqlite3.R
 
 def analyze_event(conn: sqlite3.Connection, catalog: Catalog, llm: LLM, model: str,
                   event: sqlite3.Row) -> dict:
-    statements = select_statements(conn, event["id"])
+    parts = select_parts(conn, event["id"])
     user = prompts.ANALYZE_USER.format(
-        title=event["title"], statements="\n\n".join(_describe(s, catalog) for s in statements))
+        title=event["title"], statements="\n\n".join(_describe(p, catalog) for p in parts))
     result = llm.structured(purpose="analyze", model=model, system=prompts.ANALYZE_SYSTEM,
                             user=user, schema=EventAnalysis, max_tokens=16000, effort="medium")
     analysis = result.model_dump()
 
     texts: dict[str, str] = defaultdict(str)
-    for s in statements:
-        texts[s["actor"]] += " " + (s["text"] or "")
+    for p in parts:
+        texts[p["actor"]] += " " + passage(p)
     computed = metrics.compute(analysis, texts, pair_history(conn, exclude_event=event["id"]))
-    computed["silent"] = silent_actors(conn, event["id"], statements)
+    computed["silent"] = silent_actors(conn, event["id"], parts)
 
     payload = {"llm": analysis, "metrics": computed, "model": model,
-               "statement_ids": [s["id"] for s in statements]}
-    total = conn.execute("SELECT COUNT(*) FROM statements WHERE event_id=?",
+               "part_ids": [p["id"] for p in parts]}
+    total = conn.execute("SELECT COUNT(*) FROM parts WHERE event_id=?",
                          (event["id"],)).fetchone()[0]
     with transaction(conn):
         conn.execute(
@@ -111,19 +116,29 @@ def analyze_event(conn: sqlite3.Connection, catalog: Catalog, llm: LLM, model: s
     return payload
 
 
-def _describe(s: sqlite3.Row, catalog: Catalog) -> str:
-    ex = loads(s["extraction"]) or {}
+def passage(p: sqlite3.Row) -> str:
+    """The part's own passage of the original text ('' if it could not be located)."""
+    if p["text_start"] is None:
+        return ""
+    return (p["text"] or "")[p["text_start"]:p["text_end"]]
+
+
+def _describe(p: sqlite3.Row, catalog: Catalog) -> str:
+    data = loads(p["data"]) or {}
     claims = "\n".join(f"      - {c['text']} [quote: \"{c['quote']}\"]"
-                       for c in ex.get("claims", []))
-    terms = ", ".join(f"'{t['term']}' = {t['refers_to']}" for t in ex.get("key_terms", []))
+                       for c in data.get("claims", []))
+    terms = ", ".join(f"'{t['term']}' = {t['refers_to']}" for t in data.get("key_terms", []))
+    of = f" (passage {p['idx'] + 1} of {p['n_parts']} in a multi-issue statement)" \
+        if p["n_parts"] > 1 else ""
     return (
-        f"--- statement_id={s['id']} actor={s['actor']} "
-        f"({catalog.actor(s['actor']).name}, {s['kind']}) "
-        f"date={(s['published_at'] or s['fetched_at'])[:10]}\n"
-        f"title: {s['title']}\n"
+        f"--- statement_id={p['statement_id']} actor={p['actor']} "
+        f"({catalog.actor(p['actor']).name}, {p['kind']}) "
+        f"date={p['date'][:10]}\n"
+        f"title: {p['title']}{of}\n"
+        f"issue: {p['issue']}\n"
         f"extracted claims:\n{claims}\n"
         f"key terms: {terms}\n"
-        f"text excerpt:\n{(s['text'] or '')[:TEXT_EXCERPT_CHARS]}"
+        f"text excerpt:\n{passage(p)[:TEXT_EXCERPT_CHARS] or '(not located; use the claims)'}"
     )
 
 
@@ -139,22 +154,24 @@ def pair_history(conn: sqlite3.Connection, exclude_event: int) -> dict[str, list
 
 
 def silent_actors(conn: sqlite3.Connection, event_id: int,
-                  statements: list[sqlite3.Row]) -> list[dict]:
+                  parts: list[sqlite3.Row]) -> list[dict]:
     """Actors that spoke repeatedly on this event's topics lately, but not on this event."""
-    topics = Counter(t for s in statements
-                     for t in (loads(s["extraction"]) or {}).get("topics", []))
+    topics = Counter(t for p in parts for t in (loads(p["data"]) or {}).get("topics", []))
     main_topics = {t for t, _ in topics.most_common(3)}
     if not main_topics:
         return []
-    present = {s["actor"] for s in statements}
+    present = {p["actor"] for p in parts}
     since = (datetime.now(UTC) - timedelta(days=SILENCE_LOOKBACK_DAYS)).isoformat()
-    counts: Counter = Counter()
+    seen: dict[str, set[int]] = defaultdict(set)  # actor -> statements on these topics
     for row in conn.execute(
-        "SELECT actor, extraction FROM statements WHERE relevant=1 AND event_id != ?"
-        " AND COALESCE(published_at, fetched_at) >= ?", (event_id, since),
+        """SELECT s.actor, p.statement_id, p.data
+           FROM parts p JOIN statements s ON s.id = p.statement_id
+           WHERE s.relevant=1 AND p.event_id IS NOT ?
+             AND COALESCE(s.published_at, s.fetched_at) >= ?""", (event_id, since),
     ):
         if row["actor"] not in present and main_topics & set(
-                (loads(row["extraction"]) or {}).get("topics", [])):
-            counts[row["actor"]] += 1
+                (loads(row["data"]) or {}).get("topics", [])):
+            seen[row["actor"]].add(row["statement_id"])
+    counts = Counter({a: len(ids) for a, ids in seen.items()})
     return [{"actor": a, "recent_statements_on_topic": n}
             for a, n in counts.most_common() if n >= SILENCE_MIN_STATEMENTS]

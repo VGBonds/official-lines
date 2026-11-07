@@ -14,9 +14,12 @@ from parallax.pipeline.extract import extract_pending
 from parallax.site.build import build_site
 from tests.conftest import FakeLLM
 
+RESTRAINT = "We call on all parties to exercise maximum restraint and avoid escalation now."
+BRIEFING = ("Spokesperson's regular press conference. Q: On the strait. A: " + RESTRAINT
+            + " Q: On trade talks. A: The talks were constructive and continue next week.")
 STATEMENTS = [
     ("gb-fcdo", "GB", "mfa", "UK statement on the strait"),
-    ("cn-mfa", "CN", "mfa", "Spokesperson on the strait"),
+    ("cn-mfa", "CN", "mfa", "Regular press conference"),
     ("us-fed", "US", "central_bank", "Fed remarks touching the strait"),
     ("io-imf", "imf", "org", "IMF on shipping disruption in the strait"),
     ("gb-fcdo", "GB", "mfa", "Vacancy: press officer"),
@@ -31,7 +34,7 @@ def filled(conn, catalog):
             "INSERT INTO statements (source_id, actor, kind, url, title, published_at,"
             " fetched_at, text) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             (src, actor, kind, f"https://x/{i}", title, now_iso(), now_iso(),
-             "We call on all parties to exercise maximum restraint and avoid escalation now."),
+             BRIEFING if actor == "CN" else RESTRAINT),
         )
     conn.commit()
     return conn
@@ -42,10 +45,18 @@ def test_full_pipeline(filled, catalog, tmp_path):
     assert extract_pending(filled, catalog, llm, "m", limit=100) == 5
     assert filled.execute("SELECT COUNT(*) FROM statements WHERE relevant=0").fetchone()[0] == 1
 
-    assert group_pending(filled, catalog, llm, "m") == 4
-    events = filled.execute("SELECT * FROM events").fetchall()
-    assert len(events) == 1 and events[0]["slug"] == f"strait-incident-{events[0]['id']}"
+    # 4 relevant statements; the Chinese briefing has two parts, so 5 parts.
+    assert group_pending(filled, catalog, llm, "m") == 5
+    events = {e["title"]: e for e in filled.execute("SELECT * FROM events")}
+    assert set(events) == {"Strait incident", "Trade talks"}
+    strait = events["Strait incident"]
+    assert strait["slug"] == f"strait-incident-{strait['id']}"
+    actors = {r[0] for r in filled.execute(
+        "SELECT s.actor FROM parts p JOIN statements s ON s.id = p.statement_id"
+        " WHERE p.event_id=?", (strait["id"],))}
+    assert actors == {"GB", "CN", "US", "imf"}  # China's briefing sits next to the others
 
+    # Only the strait has 2+ actors; trade talks (China alone) is not compared.
     assert analyze_due(filled, catalog, llm, "m", max_per_day=5) == 1
     assert analyze_due(filled, catalog, llm, "m", max_per_day=5) == 0  # nothing new to compare
 
@@ -64,10 +75,11 @@ def test_analysis_and_site(filled, catalog, tmp_path):
     llm = FakeLLM()
     extract_pending(filled, catalog, llm, "m", limit=100)
     group_pending(filled, catalog, llm, "m")
-    slug = filled.execute("SELECT slug FROM events").fetchone()[0]
+    slug = filled.execute("SELECT slug FROM events WHERE title='Strait incident'").fetchone()[0]
     assert analyze_due(filled, catalog, llm, "m", max_per_day=5, only_slug=slug) == 1
 
-    analysis = json.loads(filled.execute("SELECT analysis FROM events").fetchone()[0])
+    analysis = json.loads(filled.execute("SELECT analysis FROM events WHERE slug=?",
+                                         (slug,)).fetchone()[0])
     m = analysis["metrics"]
     assert m["shared_floor"] == ["p1"] and m["contested"] == ["p2"]
     assert m["shared_wording"]  # identical texts across actors are flagged
@@ -81,6 +93,11 @@ def test_analysis_and_site(filled, catalog, tmp_path):
     # Foreign ministries colour the map; the Fed (central bank) and the IMF do not.
     assert "data-lit='[\"156\", \"826\"]'" in page
     assert "International Monetary Fund" in page
+    assert "one of several topics in this statement" in page
+    assert "A ship was stopped in the strait on 1 November." in page  # background
+    assert "A ship was stopped in the strait on 1 November." in (out / "index.html").read_text()
+    china = (out / "actor" / "CN.html").read_text()
+    assert "Strait incident" in china and "Trade talks" in china
     assert (out / "index.html").exists() and (out / "coverage.html").exists()
     assert "Bank of Russia" in (out / "coverage.html").read_text()  # disabled sources shown
 
@@ -91,3 +108,67 @@ def test_budget_guard(conn):
     llm = AnthropicLLM(conn, monthly_budget_usd=5.0, client=object())
     with pytest.raises(BudgetExceeded):
         llm.text(purpose="t", model="m", system="s", user="u", max_tokens=10, effort="low")
+
+
+def test_merge_duplicates(filled, catalog):
+    from parallax.llm.schemas import Merge, Merges
+    from parallax.pipeline.events import apply_merges
+    now = now_iso()
+    ids = [filled.execute("INSERT INTO events (slug, title, created_at, last_seen) VALUES"
+                          " (?, 'x', ?, ?)", (f"e{i}", now, now)).lastrowid for i in range(3)]
+    extract_pending(filled, catalog, FakeLLM(), "m", limit=100)
+    for actor, event_id in (("GB", ids[0]), ("CN", ids[1])):
+        filled.execute("UPDATE parts SET event_id=? WHERE statement_id IN"
+                       " (SELECT id FROM statements WHERE actor=?)", (event_id, actor))
+    filled.execute("UPDATE events SET featured=1 WHERE id=?", (ids[1],))
+    merges = Merges(merges=[Merge(keep=ids[0], merge=[ids[1], 9999, ids[0]])])
+    assert apply_merges(filled, merges, set(ids)) == 1
+    actors = {r[0] for r in filled.execute(
+        "SELECT s.actor FROM parts p JOIN statements s ON s.id = p.statement_id"
+        " WHERE p.event_id=?", (ids[0],))}
+    assert actors == {"GB", "CN"}
+    assert filled.execute("SELECT featured FROM events WHERE id=?", (ids[0],)).fetchone()[0] == 1
+    assert filled.execute("SELECT COUNT(*) FROM events WHERE id=?", (ids[1],)).fetchone()[0] == 0
+
+
+def test_locate_parts():
+    from parallax.pipeline.extract import locate_parts
+    from tests.conftest import strait_part, trade_part
+    spans = locate_parts(BRIEFING, [strait_part("Q: on the  strait"), trade_part()])
+    first, second = (BRIEFING[a:b] for a, b in spans)
+    assert first.startswith("Q: On the strait") and "maximum restraint" in first
+    assert "trade" not in first and second.startswith("Q: On trade talks")
+    # Opening not found: fall back to the claim's quote; nothing found at all: (None, None).
+    assert locate_parts(BRIEFING, [strait_part("no such words here", "maximum restraint"),
+                                   strait_part("missing too", "absent quote here")])[1] == \
+        (None, None)
+    assert locate_parts("anything", [trade_part()]) == [(0, 8)]
+
+
+def test_migration_from_v1(tmp_path):
+    import sqlite3
+
+    from parallax.db import connect
+    path = tmp_path / "old.db"
+    old = sqlite3.connect(path)
+    old.executescript("""
+        CREATE TABLE sources (id TEXT PRIMARY KEY, actor TEXT, kind TEXT, name TEXT);
+        CREATE TABLE events (id INTEGER PRIMARY KEY, slug TEXT, title TEXT, created_at TEXT);
+        CREATE TABLE statements (id INTEGER PRIMARY KEY, source_id TEXT, actor TEXT,
+            kind TEXT, url TEXT UNIQUE, title TEXT, published_at TEXT, fetched_at TEXT,
+            text TEXT, extraction TEXT, extracted_at TEXT, relevant INTEGER, domain TEXT,
+            event_id INTEGER REFERENCES events(id), grouped_at TEXT);
+        CREATE INDEX idx_statements_event ON statements(event_id);
+        INSERT INTO sources VALUES ('s', 'GB', 'mfa', 'S');
+        INSERT INTO events VALUES (1, 'e', 'E', '2026-11-01');
+        INSERT INTO statements VALUES (7, 's', 'GB', 'mfa', 'https://x', 'T', NULL, '2026-11-01',
+            'body', '{}', '2026-11-01', 1, 'politics', 1, '2026-11-01');
+    """)
+    old.commit()
+    old.close()
+    conn = connect(path)
+    row = conn.execute("SELECT * FROM statements").fetchone()
+    assert row["id"] == 7 and row["text"] == "body" and row["extracted_at"] is None
+    assert "event_id" not in row.keys()
+    assert conn.execute("SELECT COUNT(*) FROM events").fetchone()[0] == 0
+    connect(path)  # a second connect is a no-op

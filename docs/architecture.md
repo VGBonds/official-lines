@@ -10,6 +10,7 @@ collect ──► extract ──► group ──► analyze ──► build
   HTTP      Haiku 5.5   Haiku 5.5  Sonnet 5.5   Jinja → site/*.html
   no AI     per         per batch  per event    + metrics (plain Python)
             statement   of 25      (2+ actors)
+                        parts
 ```
 
 `parallax run` executes all five in order. Each step only processes what is new, so running it twice is harmless. If the AI budget is reached, the AI steps are skipped and collection and the site keep going.
@@ -31,8 +32,9 @@ parallax/
     schemas.py        the exact JSON shapes the AI must return (pydantic)
     prompts.py        every prompt; part of the published method
   pipeline/
-    extract.py        step 1: summary, issue, claims + quotes, key terms per statement
-    events.py         step 2: assign statements to events (or create new ones)
+    extract.py        step 1: split each statement into parts (one per issue), with
+                      summary, claims + quotes, key terms; find each part's passage
+    events.py         step 2: assign parts to events (or create new ones), merge duplicates
     analyze.py        step 3: propositions × actors stance table, silence
     metrics.py        agreement, shared floor, contested, unusual alignment, shared wording
     brief.py          weekly newsletter draft
@@ -50,13 +52,18 @@ tests/                offline tests; tests/conftest.py has the stand-in AI (Fake
 | Table | One row per | Key columns |
 |---|---|---|
 | `sources` | source in the catalog | last_ok_at, last_error, last_found, last_new |
-| `statements` | official statement | url (unique), title, published_at, text (private), extraction (JSON), relevant, event_id |
+| `statements` | official statement | url (unique), title, published_at, text (private), extraction (JSON: overall summary), relevant |
+| `parts` | issue within a statement | statement_id, idx, issue, summary, data (JSON: claims, key terms, topics), text_start/text_end (its passage), event_id |
 | `events` | event | slug, title, summary, featured, analysis (JSON: AI output + metrics) |
 | `llm_calls` | AI call | purpose, model, tokens, cost_usd |
 
 Look inside with `sqlite3 data/parallax.db`, e.g. `SELECT actor, COUNT(*) FROM statements GROUP BY actor;`.
 
+The schema has a version number (`PRAGMA user_version`). `db.py` upgrades an older database on the next run; version 1 to 2 keeps every collected statement but redoes extraction, events and analyses.
+
 ## Design choices, and why
+
+- **Parts, not whole statements.** A foreign ministry's daily press briefing answers ten or more questions on unrelated issues. Filed as one item it could only join one event, and that ministry would be missing from every other comparison. So extraction splits each statement into one part per issue, and events collect parts. Most statements have exactly one part.
 
 - **Static site.** Nothing to hack, nothing to crash, served for free by Caddy, survives traffic spikes. Filtering and search on the front page run in the browser.
 - **AI grouping instead of embeddings.** At a few hundred statements a day, asking a cheap model to assign statements to open events costs about $1 a month and avoids heavy machine-learning libraries on a small server.

@@ -60,7 +60,7 @@ The ledger counts cached input at full price, so the real bill is at or below wh
 The AI will sometimes group badly or misstate a stance. In v1 the fixes are manual:
 
 - **Re-run a comparison** after more statements arrived: `uv run parallax analyze --event SLUG`.
-- **Two events that should be one, or a statement in the wrong event:** for now, fix it in the database with `sqlite3 data/parallax.db` (e.g. `UPDATE statements SET event_id=12 WHERE id=345;`), then re-analyse. A small editor command for this is on the [roadmap](roadmap.md).
+- **Two events that should be one, or a statement in the wrong event:** for now, fix it in the database with `sqlite3 data/parallax.db` (e.g. `UPDATE parts SET event_id=12 WHERE statement_id=345;`; a press briefing has several parts, see `SELECT id, idx, issue FROM parts WHERE statement_id=345;`), then re-analyse. A small editor command for this is on the [roadmap](roadmap.md).
 - **A systematic mistake** (the same kind of error again and again): the prompts in `parallax/llm/prompts.py` are the place to fix it. Prompts are published methodology, so note changes in the Method page.
 
 ## Troubleshooting
