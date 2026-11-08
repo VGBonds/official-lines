@@ -33,14 +33,14 @@
     {% if e.late_actors %}
     <p class="notice">Compared on {{ e.analysed_at | date }}. Statements from {{ e.late_names }} arrived later and are not in this table yet; they are listed below, and the comparison is updated on the next run.</p>
     {% endif %}
-    <p class="muted small">● asserts &nbsp; ◐ qualifies &nbsp; ○ denies &nbsp; blank: no stance in the statements we have. Hover or tap a symbol for the quote.</p>
+    <p class="muted small">● asserts &nbsp; ◐ qualifies &nbsp; ○ denies &nbsp; blank: no stance in the statements we have. Hover or tap a symbol for the quote. <strong>Shared floor:</strong> every actor in the table asserts it. <strong>Uncontested majority:</strong> more than half assert it, nobody denies it, the rest are silent or qualify. <strong>Contested:</strong> one asserts, another denies. <a href="{{ root }}/method.html">Definitions</a>.</p>
     <div class="table-wrap">
     <table class="matrix">
       <thead><tr><th>Proposition</th>{% for c in e.matrix.columns %}<th>{{ actors[c].name }}</th>{% endfor %}</tr></thead>
       <tbody>
       {% for r in e.matrix.rows %}
-        <tr class="{{ 'floor' if r.floor else '' }} {{ 'contested' if r.contested else '' }}">
-          <td>{{ r.prop.text }}{% if r.floor %} <span class="badge">shared floor</span>{% endif %}{% if r.contested %} <span class="badge">contested</span>{% endif %}</td>
+        <tr class="{{ 'floor' if r.floor else '' }} {{ 'majority' if r.majority else '' }} {{ 'contested' if r.contested else '' }}">
+          <td>{{ r.prop.text }}{% if r.floor %} <span class="badge">shared floor</span>{% endif %}{% if r.majority %} <span class="badge">uncontested majority</span>{% endif %}{% if r.contested %} <span class="badge">contested</span>{% endif %}</td>
           {% for c in r.cells %}<td class="cell">{% if c.stance %}<span class="stance" title="“{{ c.quote }}”" tabindex="0">{{ stance_symbol[c.stance] }}</span>{% endif %}</td>{% endfor %}
         </tr>
       {% endfor %}

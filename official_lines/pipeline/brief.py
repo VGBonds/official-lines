@@ -14,6 +14,7 @@ from official_lines.catalog import Catalog
 from official_lines.db import loads
 from official_lines.llm import prompts
 from official_lines.llm.client import LLM
+from official_lines.site.build import refresh_labels
 
 MAX_EVENTS = 6
 
@@ -42,7 +43,7 @@ def write_brief(conn: sqlite3.Connection, catalog: Catalog, llm: LLM, model: str
         return None
     material = []
     for e in events:
-        a = loads(e["analysis"])
+        a = refresh_labels(loads(e["analysis"]))
         material.append({
             "title": e["title"],
             "url": f"{site_url}/event/{e['slug']}.html",

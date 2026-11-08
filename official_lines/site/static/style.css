@@ -9,17 +9,18 @@
   --accent-soft: #dce6f0;
   --land: #e9e7e1;
   --floor: #eef3ea;
+  --majority: #f3f5ef;
   --contested: #f6efe3;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #161615; --surface: #1f1f1d; --text: #ecebe6; --muted: #a09e97; --line: #34332f;
-    --accent: #8db4dc; --accent-soft: #2a3a4b; --land: #2c2b28; --floor: #233024; --contested: #3a3122;
+    --accent: #8db4dc; --accent-soft: #2a3a4b; --land: #2c2b28; --floor: #233024; --majority: #23271f; --contested: #3a3122;
   }
 }
 :root[data-theme="dark"] {
   --bg: #161615; --surface: #1f1f1d; --text: #ecebe6; --muted: #a09e97; --line: #34332f;
-  --accent: #8db4dc; --accent-soft: #2a3a4b; --land: #2c2b28; --floor: #233024; --contested: #3a3122;
+  --accent: #8db4dc; --accent-soft: #2a3a4b; --land: #2c2b28; --floor: #233024; --majority: #23271f; --contested: #3a3122;
 }
 
 * { box-sizing: border-box; }
@@ -74,6 +75,7 @@ th { font-family: system-ui, sans-serif; font-size: .8rem; color: var(--muted); 
 .matrix td.cell { text-align: center; font-size: 1.2rem; width: 1%; white-space: nowrap; }
 .matrix th:not(:first-child) { text-align: center; min-width: 72px; }
 .matrix tr.floor td:first-child { background: var(--floor); }
+.matrix tr.majority td:first-child { background: var(--majority); }
 .matrix tr.contested td:first-child { background: var(--contested); }
 .stance { cursor: help; }
 .term { display: inline-block; margin-right: 16px; }

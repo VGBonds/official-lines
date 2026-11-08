@@ -5,9 +5,14 @@ Definitions (also in docs/methodology.md):
 stance value      asserts = 1, qualifies = 0.5, denies = 0. Silence has no value.
 pair agreement    for two actors, over the propositions BOTH took a stance on:
                   mean of (1 - |value_a - value_b|). 1 = same line, 0 = opposite lines.
-shared floor      propositions asserted by at least 60% of the actors that took any stance,
-                  and denied by nobody. "What the official lines do not fight about."
+shared floor      propositions that EVERY actor in the stance table asserts (no silence, no
+                  qualification, no denial). Needs at least 2 actors. True common ground.
+uncontested majority
+                  propositions asserted by more than half of the actors in the stance table
+                  and denied by none, but not asserted by all: the rest are silent or qualify.
 contested         propositions that at least one actor asserts and another denies.
+(The "actors in the stance table" are those that took at least one stance in the comparison,
+i.e. the columns of the table on the event page.)
 polar pair        the actor pair with the lowest agreement (needs >= 2 shared propositions).
 unusual alignment a pair whose agreement here differs by >= 0.5 from its average over
                   earlier events (needs >= 3 earlier events with both actors).
@@ -18,10 +23,8 @@ shared wording    two different actors whose texts share long identical word seq
 import re
 from collections import defaultdict
 from itertools import combinations
-from math import ceil
 
 STANCE_VALUE = {"asserts": 1.0, "qualifies": 0.5, "denies": 0.0}
-FLOOR_SHARE = 0.6
 UNUSUAL_DELTA = 0.5
 MIN_HISTORY = 3
 SHINGLE_WORDS = 8
@@ -55,17 +58,29 @@ def pair_agreements(table: dict[str, dict[str, str]]) -> dict[str, dict]:
     return result
 
 
+def _speakers(table: dict[str, dict[str, str]]) -> list[str]:
+    return [a for a in table if table[a]]
+
+
 def shared_floor(table: dict[str, dict[str, str]], proposition_ids: list[str]) -> list[str]:
-    speakers = [a for a in table if table[a]]
+    speakers = _speakers(table)
     if len(speakers) < 2:
         return []
-    needed = max(2, ceil(FLOOR_SHARE * len(speakers)))
-    floor = []
+    return [pid for pid in proposition_ids
+            if all(table[a].get(pid) == "asserts" for a in speakers)]
+
+
+def uncontested_majority(table: dict[str, dict[str, str]],
+                         proposition_ids: list[str]) -> list[str]:
+    speakers = _speakers(table)
+    floor = set(shared_floor(table, proposition_ids))
+    out = []
     for pid in proposition_ids:
         stances = [table[a].get(pid) for a in speakers]
-        if "denies" not in stances and stances.count("asserts") >= needed:
-            floor.append(pid)
-    return floor
+        if pid not in floor and "denies" not in stances \
+                and 2 * stances.count("asserts") > len(speakers):
+            out.append(pid)
+    return out
 
 
 def contested(table: dict[str, dict[str, str]], proposition_ids: list[str]) -> list[str]:
@@ -119,6 +134,16 @@ def shared_wording(texts_by_actor: dict[str, str], min_shared: int = 2) -> list[
     return sorted(found, key=lambda f: -f["shared_phrases"])
 
 
+def agreement_labels(table: dict[str, dict[str, str]], proposition_ids: list[str]) -> dict:
+    """The per-proposition labels. Recomputed from the stored stance table whenever the site
+    or the brief is built, so stored comparisons always follow the current definitions."""
+    return {
+        "shared_floor": shared_floor(table, proposition_ids),
+        "uncontested_majority": uncontested_majority(table, proposition_ids),
+        "contested": contested(table, proposition_ids),
+    }
+
+
 def compute(analysis: dict, texts_by_actor: dict[str, str],
             history: dict[str, list[float]]) -> dict:
     table = stance_table(analysis["positions"])
@@ -127,8 +152,7 @@ def compute(analysis: dict, texts_by_actor: dict[str, str],
     return {
         "stance_table": table,
         "pairs": pairs,
-        "shared_floor": shared_floor(table, prop_ids),
-        "contested": contested(table, prop_ids),
+        **agreement_labels(table, prop_ids),
         "polar_pair": polar_pair(pairs),
         "unusual_alignment": unusual_alignment(pairs, history),
         "shared_wording": shared_wording(texts_by_actor),

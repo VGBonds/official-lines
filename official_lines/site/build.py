@@ -16,6 +16,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from official_lines.catalog import Catalog, on_map
 from official_lines.config import PROJECT_ROOT
 from official_lines.db import loads
+from official_lines.pipeline import metrics
 from official_lines.pipeline.analyze import late_actors
 from official_lines.pipeline.events import PART_COLUMNS
 
@@ -109,7 +110,7 @@ def load_events(conn: sqlite3.Connection, catalog: Catalog) -> list[dict]:
         e["orgs"] = [a for a in actor_ids if not catalog.actor(a).is_country]
         e["map_iso"] = sorted({catalog.actor(s["actor"]).iso_numeric for s in statements
                                if on_map(catalog.actor(s["actor"]), s["kind"])})
-        e["analysis"] = loads(row["analysis"])
+        e["analysis"] = refresh_labels(loads(row["analysis"]))
         e["background"] = (e["analysis"] or {}).get("llm", {}).get("background", "")
         e["late_actors"] = late_actors(conn, row["id"], e["analysis"])
         e["late_names"] = _and([catalog.actor(a).name for a in e["late_actors"]])
@@ -117,6 +118,16 @@ def load_events(conn: sqlite3.Connection, catalog: Catalog) -> list[dict]:
             e["matrix"] = stance_matrix(e["analysis"], actor_ids)
         events.append(e)
     return events
+
+
+def refresh_labels(analysis: dict | None) -> dict | None:
+    """Recompute shared floor / uncontested majority / contested from the stored stance table,
+    so comparisons stored under older definitions follow the current ones."""
+    if analysis:
+        prop_ids = [p["id"] for p in analysis["llm"]["propositions"]]
+        analysis["metrics"].update(
+            metrics.agreement_labels(analysis["metrics"]["stance_table"], prop_ids))
+    return analysis
 
 
 def _and(names: list[str]) -> str:
@@ -136,6 +147,7 @@ def stance_matrix(analysis: dict, actor_ids: list[str]) -> dict:
         rows.append({
             "prop": prop,
             "floor": prop["id"] in analysis["metrics"]["shared_floor"],
+            "majority": prop["id"] in analysis["metrics"]["uncontested_majority"],
             "contested": prop["id"] in analysis["metrics"]["contested"],
             "cells": [
                 {"stance": table.get(a, {}).get(prop["id"]),

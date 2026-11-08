@@ -24,14 +24,27 @@ We read **English** versions only. Some governments say less, or say it differen
    The same step writes a short **background** for readers new to the event. It may use only what the statements themselves say, never the model's own knowledge: facts that no source disputes are stated plainly, everything else is attributed ("according to ..."), and evaluative words and unattributed motives or causes are not allowed. Where actors use rival names for the same thing, the background describes it neutrally instead. A background built only from official statements is still only as complete as those statements: what no one mentions is missing.
 5. **Measure.** Plain arithmetic, no AI, turns that table into the numbers below.
 
+## Agreement labels
+
+Each proposition in the stance table can carry one label. "The actors in the table" are the actors that took at least one stance in the comparison: the columns of the table on the event page.
+
+| Label | Definition | Example with France, Germany, the UK, the US and China in the table |
+|---|---|---|
+| **Shared floor** | **Every** actor in the table asserts it. No silence, no qualification, no denial. | All five assert it. |
+| **Uncontested majority** | **More than half** of the actors in the table assert it, **none** denies it, and the others are silent or qualify. | Four assert it, China says nothing about it. |
+| **Contested** | At least one actor asserts it and at least one other denies it. | Four assert it, China denies it. |
+| *(no label)* | Anything else, e.g. a claim made by one or two actors that nobody else addresses. | |
+
+**Silence is not agreement.** An actor that says nothing on a proposition is shown as a blank cell and never counted as assenting. That is why a shared floor requires every actor to say it explicitly, and why it is rare when many actors speak. When it does occur, it is notable.
+
+None of these labels says anything about truth. A shared floor is what the official lines do not fight about; it can still be wrong.
+
 ## The numbers
 
 | Measure | Definition |
 |---|---|
 | Stance value | asserts = 1, qualifies = 0.5, denies = 0 |
 | Agreement of two actors | Over the propositions both took a stance on: the average of 1 − \|difference in stance value\|. 1 = same line, 0 = opposite lines. |
-| Shared floor | Propositions asserted by at least 60% of the actors that took any stance, and denied by none. What the official lines do not fight about. That does not make them true. |
-| Contested | Propositions that one actor asserts and another denies. |
 | Furthest apart | The pair with the lowest agreement (below 0.5, over at least 2 shared propositions). |
 | Unusual agreement / disagreement | A pair whose agreement on this event differs by 0.5 or more from its average over at least 3 earlier events. "Unusual" is relative to what we have recorded so far, nothing more. |
 | Shared wording | Two actors whose texts share long identical passages (8+ words in a row): a joint statement, or common talking points. |

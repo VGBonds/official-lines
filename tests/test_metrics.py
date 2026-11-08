@@ -51,3 +51,17 @@ def test_shared_wording():
         "US": "Something entirely different was said here by the spokesperson today.",
     })
     assert len(found) == 1 and found[0]["pair"] == ["CN", "RU"]
+
+
+def test_agreement_labels_treat_silence_as_silence():
+    t = metrics.stance_table([
+        *(pos(a, "p1", "asserts") for a in "ABCD"),                      # everyone
+        *(pos(a, "p2", "asserts") for a in "ABC"),                       # D silent
+        pos("A", "p3", "asserts"), pos("B", "p3", "asserts"), pos("C", "p3", "qualifies"),
+        *(pos(a, "p4", "asserts") for a in "ABC"), pos("D", "p4", "denies"),
+        *(pos(a, "p5", "asserts") for a in "ABC"), pos("D", "p5", "qualifies"),
+    ])
+    labels = metrics.agreement_labels(t, ["p1", "p2", "p3", "p4", "p5"])
+    assert labels["shared_floor"] == ["p1"]
+    assert labels["uncontested_majority"] == ["p2", "p5"]  # p3: 2 of 4 is not more than half
+    assert labels["contested"] == ["p4"]
