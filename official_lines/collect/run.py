@@ -3,12 +3,19 @@
 For each enabled source: read the feed or listing page, keep links we have not seen,
 fetch each new statement page, extract its text, store it. A failing source never stops
 the pass; its error is recorded in the `sources` table and shown on the coverage page.
+
+If a statement page cannot be fetched, the statement is stored with what the feed or
+listing gave (at least the title) and marked `page_missing_since`. Later passes retry the
+page for RETRY_DAYS; when it arrives, the full text replaces the stub and the statement is
+extracted again. After that we stop asking: the site has decided to refuse us.
 """
 
 import logging
 import sqlite3
+from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
 
 import httpx
 
@@ -20,6 +27,8 @@ from official_lines.db import now_iso, transaction
 log = logging.getLogger(__name__)
 
 FULL_TEXT_CHARS = 1500  # feed text shorter than this is treated as a teaser: fetch the page
+RETRY_DAYS = 2  # how long we retry statement pages that failed
+MAX_RETRIES_PER_SOURCE = 10  # per pass, so a long outage doesn't flood a site afterwards
 
 
 @dataclass
@@ -27,6 +36,8 @@ class SourceResult:
     source_id: str
     found: int = 0
     new: int = 0
+    retried: int = 0
+    recovered: int = 0
     error: str | None = None
 
 
@@ -51,25 +62,45 @@ def collect(
     sync_sources(conn, catalog)
     sources = [s for s in catalog.enabled_sources() if only in (None, s.id)]
     known = {row[0] for row in conn.execute("SELECT url FROM statements")}
+    retries = pages_to_retry(conn)
 
     # Sources are fetched in parallel (different hosts); writes happen here, on one thread.
     with ThreadPoolExecutor(max_workers=6) as pool:
         futures = [
-            pool.submit(_fetch_source, s, client, known, max_new_per_source) for s in sources
+            pool.submit(_fetch_source, s, client, known, max_new_per_source,
+                        retries.get(s.id, []))
+            for s in sources
         ]
         results = []
         for source, future in zip(sources, futures, strict=True):
-            result, rows = future.result()
-            _store(conn, source, result, rows)
+            result, rows, recovered = future.result()
+            _store(conn, source, result, rows, recovered)
             results.append(result)
-            log.info("%-28s found=%-3d new=%-3d %s", source.id, result.found, result.new,
-                     result.error or "")
+            retried = f"retried={result.retried} recovered={result.recovered} " \
+                if result.retried else ""
+            log.info("%-28s found=%-3d new=%-3d %s%s", source.id, result.found, result.new,
+                     retried, result.error or "")
     return results
 
 
-def _fetch_source(source: Source, client: PoliteClient, known: set[str], max_new: int):
+def pages_to_retry(conn: sqlite3.Connection) -> dict[str, list[dict]]:
+    """Statements whose page failed within the last RETRY_DAYS, oldest first, per source."""
+    since = (datetime.now(UTC) - timedelta(days=RETRY_DAYS)).isoformat()
+    by_source: dict[str, list[dict]] = defaultdict(list)
+    for r in conn.execute(
+        "SELECT id, source_id, url, text FROM statements WHERE page_missing_since >= ?"
+        " ORDER BY page_missing_since", (since,),
+    ):
+        if len(by_source[r["source_id"]]) < MAX_RETRIES_PER_SOURCE:
+            by_source[r["source_id"]].append(dict(r))
+    return by_source
+
+
+def _fetch_source(source: Source, client: PoliteClient, known: set[str], max_new: int,
+                  retries: list[dict]):
     result = SourceResult(source.id)
-    rows = []
+    rows: list[dict] = []
+    recovered: list[dict] = []
     try:
         items = _list_items(source, client)
         result.found = len(items)
@@ -78,12 +109,31 @@ def _fetch_source(source: Source, client: PoliteClient, known: set[str], max_new
             if row:
                 rows.append(row)
         result.new = len(rows)
+        for stub in retries:  # only when the source answers at all
+            result.retried += 1
+            page = _retry_page(source, stub, client)
+            if page is not None:
+                recovered.append(page)
+                result.recovered += page["text"] is not None
     except (httpx.HTTPError, Blocked) as e:
         result.error = f"{type(e).__name__}: {e}"[:300]
     except Exception as e:  # noqa: BLE001 - one broken source must not stop the run
         log.exception("unexpected error in %s", source.id)
         result.error = f"{type(e).__name__}: {e}"[:300]
-    return result, rows
+    return result, rows, recovered
+
+
+def _retry_page(source: Source, stub: dict, client: PoliteClient) -> dict | None:
+    """None: still failing. Otherwise the page answered; 'text' is the better text, or None
+    if the page had nothing more than what we already have."""
+    try:
+        page = client.get(stub["url"])
+    except (httpx.HTTPError, Blocked):
+        return None
+    article = parse_article(page.text, stub["url"])
+    better = article.text if article.text and len(article.text) > len(stub["text"] or "") \
+        else None
+    return {"id": stub["id"], "text": better, "published_at": article.published_at}
 
 
 def _list_items(source: Source, client: PoliteClient) -> list[Item]:
@@ -96,6 +146,7 @@ def _list_items(source: Source, client: PoliteClient) -> list[Item]:
 
 def _fetch_statement(source: Source, item: Item, client: PoliteClient) -> dict | None:
     title, published, text = item.title, item.published_at, item.feed_text
+    page_missing = False
     if not text or len(text) < FULL_TEXT_CHARS:
         try:
             page = client.get(item.url)
@@ -104,6 +155,7 @@ def _fetch_statement(source: Source, item: Item, client: PoliteClient) -> dict |
             # so the site still records that this actor spoke.
             log.warning("%s: cannot fetch %s (%s)", source.id, item.url, str(e).splitlines()[0])
             page = None
+            page_missing = True
         if page is not None:
             article = parse_article(page.text, item.url)
             title = title or article.title
@@ -115,19 +167,30 @@ def _fetch_statement(source: Source, item: Item, client: PoliteClient) -> dict |
     return {
         "source_id": source.id, "actor": source.actor, "kind": source.kind, "url": item.url,
         "title": title.strip(), "published_at": published, "text": text,
+        "page_missing": page_missing,
     }
 
 
-def _store(conn: sqlite3.Connection, source: Source, result: SourceResult, rows: list[dict]):
+def _store(conn: sqlite3.Connection, source: Source, result: SourceResult, rows: list[dict],
+           recovered: list[dict]):
     now = now_iso()
     with transaction(conn):
         for r in rows:
             conn.execute(
                 """INSERT OR IGNORE INTO statements
-                   (source_id, actor, kind, url, title, published_at, fetched_at, text)
-                   VALUES (:source_id, :actor, :kind, :url, :title, :published_at, :now, :text)""",
-                {**r, "now": now},
+                   (source_id, actor, kind, url, title, published_at, fetched_at, text,
+                    page_missing_since)
+                   VALUES (:source_id, :actor, :kind, :url, :title, :published_at, :now, :text,
+                           :missing)""",
+                {**r, "now": now, "missing": now if r["page_missing"] else None},
             )
+        for r in recovered:
+            conn.execute("UPDATE statements SET page_missing_since=NULL,"
+                         " published_at=COALESCE(published_at, ?) WHERE id=?",
+                         (r["published_at"], r["id"]))
+            if r["text"] is not None:  # full text arrived: the AI reads the statement again
+                conn.execute("UPDATE statements SET text=?, extraction=NULL, extracted_at=NULL,"
+                             " relevant=NULL WHERE id=?", (r["text"], r["id"]))
         conn.execute(
             """UPDATE sources SET last_run_at=?, last_error=?, last_found=?, last_new=?,
                last_ok_at = CASE WHEN ? IS NULL THEN ? ELSE last_ok_at END WHERE id=?""",

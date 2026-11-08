@@ -69,3 +69,7 @@ Official sites redesign without notice. When `official-lines sources` shows a so
 3. Gone or blocked? `enabled: false`, record the reason in `status` and `notes`.
 
 Then `deploy/push.sh SERVER_IP` to send the catalog to the server.
+
+A failure for a single run needs nothing from you: the next run reads the source's list again and picks up whatever is new. Statement pages that failed are retried for 2 days (see [Architecture](architecture.md)).
+
+**Sites that refuse servers.** Some sites answer a home connection but refuse data-centre IP addresses (in 2026-11: the U.S. State Department and gov.za). The symptom is a source that works on your laptop but fails on the server, typically with `407`, `403` or "connection refused". We do not route around such blocks with proxies; mark the source `enabled: false`, `status: blocked`, and say so in `notes`.

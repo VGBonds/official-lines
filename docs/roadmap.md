@@ -7,13 +7,14 @@ Collect ≈15 countries and ≈15 organisations in English, group by event, comp
 ## Next, in rough order
 
 1. **Editor commands.** `official-lines merge`, `official-lines move` and `official-lines split` for fixing event grouping without SQL.
-2. **Better baseline for "unusual".** Today "unusual agreement" compares against Official Lines' own history, which starts empty. Seed it with **UN General Assembly voting data** (the Voeten/Bailey dataset, public), which records how closely every pair of countries has voted for decades.
-3. **Batch API for analysis.** Anthropic's batch API halves the price; analysis isn't urgent, so the daily comparisons could run as one batch.
-4. **Second-model audit.** Re-run a sample of comparisons with a model from another vendor and publish where they disagree. It is an honest answer to "isn't your AI biased?".
-5. **Central bank view.** Central banks are collected but off the map. A separate page could compare monetary-policy language over time (inflation, currency, sanctions): the most valuable piece for the finance audience.
-6. **More languages.** Collect native-language versions alongside the English ones and compare the two: what does a government say at home vs abroad?
-7. **More coverage.** Each new source should improve balance (Global South, regional organisations) more than volume.
-8. **Legal check before a big launch.** Our display rule (title, link, own summary, quotes of at most ~30 words) is conservative, but get a media lawyer's opinion once there is an audience or revenue. Also check hosting-location questions if we ever add state media.
+2. **Sources that refuse servers.** Some sites block data-centre IP addresses (2026-11: U.S. State Department, gov.za). We do not route around such blocks. Where a site offers an official email subscription (the State Department does), an inbox that receives those emails and feeds them to the pipeline would restore coverage legitimately.
+3. **Better baseline for "unusual".** Today "unusual agreement" compares against Official Lines' own history, which starts empty. Seed it with **UN General Assembly voting data** (the Voeten/Bailey dataset, public), which records how closely every pair of countries has voted for decades.
+4. **Batch API for analysis.** Anthropic's batch API halves the price; analysis isn't urgent, so the daily comparisons could run as one batch.
+5. **Second-model audit.** Re-run a sample of comparisons with a model from another vendor and publish where they disagree. It is an honest answer to "isn't your AI biased?".
+6. **Central bank view.** Central banks are collected but off the map. A separate page could compare monetary-policy language over time (inflation, currency, sanctions): the most valuable piece for the finance audience.
+7. **More languages.** Collect native-language versions alongside the English ones and compare the two: what does a government say at home vs abroad?
+8. **More coverage.** Each new source should improve balance (Global South, regional organisations) more than volume.
+9. **Legal check before a big launch.** Our display rule (title, link, own summary, quotes of at most ~30 words) is conservative, but get a media lawyer's opinion once there is an audience or revenue. Also check hosting-location questions if we ever add state media.
 
 ## Business plan
 

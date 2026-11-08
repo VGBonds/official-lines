@@ -56,6 +56,9 @@ echo "==> Caddy config"
 SITE_ADDR="$DOMAIN"
 if [[ "$DOMAIN" =~ ^[0-9.]+$ ]]; then SITE_ADDR=":80"; fi  # bare IP: plain HTTP until you have a domain
 sed "s/YOUR_DOMAIN/$SITE_ADDR/" "$(dirname "$0")/Caddyfile" > /etc/caddy/Caddyfile
+if [ "$SITE_ADDR" != ":80" ]; then  # www.<domain> sends visitors to <domain>
+  printf '\nwww.%s {\n\tredir https://%s{uri} permanent\n}\n' "$DOMAIN" "$DOMAIN" >> /etc/caddy/Caddyfile
+fi
 systemctl reload caddy || systemctl restart caddy
 
 echo "==> systemd timers (pipeline every 3 hours, backup nightly)"

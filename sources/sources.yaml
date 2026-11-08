@@ -31,9 +31,9 @@ sources:
     homepage: https://www.state.gov/
     method: rss
     url: "https://www.state.gov/rss-feed/press-releases/feed/"
-    enabled: true
-    status: ok
-    notes: "probed 2026-11-07: 200, 10 items, newest 2026-11-06; previously WAF-blocked (2026-09); works again now"
+    enabled: false
+    status: blocked
+    notes: "Refuses data-centre IPs (2026-11-08: 407 from CloudFront on the Hetzner server for every State Dept site, incl. usun.usmission.gov); works from home connections. We do not route around it. Possible legal route: the department's email subscriptions (roadmap). Earlier: probed 2026-11-07: 200, 10 items, newest 2026-11-06; previously WAF-blocked (2026-09); works again now"
   - id: us-treasury
     actor: US
     kind: finance
@@ -435,9 +435,9 @@ sources:
     url: "https://www.gov.za/news/media-statements"
     link_selector: "a[href]"
     link_pattern: "/news/media-statements/[a-z0-9-]{15,}$"
-    enabled: true
-    status: ok
-    notes: "probed 2026-11-07: 200, 20 links, article text present (sentences=12 chars=2293); gov.za/rss.xml also works but mixes in gazette notices"
+    enabled: false
+    status: blocked
+    notes: "Refuses data-centre IPs (2026-11-08: connection refused from the Hetzner server, even for the home page); works from home connections. Presidency, DIRCO, Treasury and SARB still cover South Africa. Earlier: probed 2026-11-07: 200, 20 links, article text present (sentences=12 chars=2293); gov.za/rss.xml also works but mixes in gazette notices"
   - id: za-dirco
     actor: ZA
     kind: mfa

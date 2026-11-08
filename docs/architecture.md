@@ -52,17 +52,18 @@ tests/                offline tests; tests/conftest.py has the stand-in AI (Fake
 | Table | One row per | Key columns |
 |---|---|---|
 | `sources` | source in the catalog | last_ok_at, last_error, last_found, last_new |
-| `statements` | official statement | url (unique), title, published_at, text (private), extraction (JSON: overall summary), relevant |
+| `statements` | official statement | url (unique), title, published_at, text (private), extraction (JSON: overall summary), relevant, page_missing_since |
 | `parts` | issue within a statement | statement_id, idx, issue, summary, data (JSON: claims, key terms, topics), text_start/text_end (its passage), event_id |
 | `events` | event | slug, title, summary, featured, analysis (JSON: AI output + metrics) |
 | `llm_calls` | AI call | purpose, model, tokens, cost_usd |
 
 Look inside with `sqlite3 data/official-lines.db`, e.g. `SELECT actor, COUNT(*) FROM statements GROUP BY actor;`.
 
-The schema has a version number (`PRAGMA user_version`). `db.py` upgrades an older database on the next run; version 1 to 2 keeps every collected statement but redoes extraction, events and analyses.
+The schema has a version number (`PRAGMA user_version`). `db.py` upgrades an older database on the next run; version 1 to 2 keeps every collected statement but redoes extraction, events and analyses; version 2 to 3 only adds a column.
 
 ## Design choices, and why
 
+- **Each run reads only what is new.** A source's feed or listing shows its latest items; anything whose URL we don't have yet is fetched (at most 15 per source per run, the rest next run). We never crawl archives, so a source that is down for longer than its list reaches back loses those items for us. If one statement page fails, we keep the feed's title and summary, mark it `page_missing_since`, and retry that page on each run for 2 days; when it arrives, the full text replaces the stub and the AI reads the statement again.
 - **Parts, not whole statements.** A foreign ministry's daily press briefing answers ten or more questions on unrelated issues. Filed as one item it could only join one event, and that ministry would be missing from every other comparison. So extraction splits each statement into one part per issue, and events collect parts. Most statements have exactly one part.
 
 - **Static site.** Nothing to hack, nothing to crash, served for free by Caddy, survives traffic spikes. Filtering and search on the front page run in the browser.

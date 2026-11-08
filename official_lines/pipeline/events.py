@@ -65,6 +65,7 @@ def group_pending(conn: sqlite3.Connection, catalog: Catalog, llm: LLM, model: s
             log.warning("grouping batch failed: %s", e)
             continue
         grouped += apply_grouping(conn, batch, grouping, {e["id"] for e in open_events})
+        log.info("grouped %d of %d parts", grouped, len(pending))
     return grouped
 
 

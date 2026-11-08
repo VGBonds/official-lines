@@ -13,7 +13,7 @@ llm_calls   every LLM call with tokens and cost (the budget guard reads this)
 import json
 import sqlite3
 from contextlib import contextmanager
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 SCHEMA = """
@@ -43,7 +43,9 @@ CREATE TABLE IF NOT EXISTS statements (
     extraction    TEXT,              -- JSON from the extraction step
     extracted_at  TEXT,
     relevant      INTEGER,           -- 1 = substantive statement, 0 = noise (job ads, notices...)
-    domain        TEXT               -- politics | economics | both | other
+    domain        TEXT,              -- politics | economics | both | other
+    page_missing_since TEXT          -- set when the statement page could not be fetched
+                                     -- (we keep the feed's title/summary and retry for a while)
 );
 CREATE INDEX IF NOT EXISTS idx_statements_published ON statements(published_at);
 
@@ -101,11 +103,12 @@ def connect(db_path: Path) -> sqlite3.Connection:
     conn.execute("PRAGMA foreign_keys=ON")
     _migrate(conn)
     conn.executescript(SCHEMA)
+    _add_missing_columns(conn)
     conn.execute(f"PRAGMA user_version={SCHEMA_VERSION}")
     return conn
 
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 
 def _migrate(conn: sqlite3.Connection) -> None:
@@ -135,6 +138,20 @@ def _migrate(conn: sqlite3.Connection) -> None:
         COMMIT;
         PRAGMA foreign_keys=ON;
     """)
+
+
+def _add_missing_columns(conn: sqlite3.Connection) -> None:
+    """Version 3 added statements.page_missing_since. CREATE TABLE IF NOT EXISTS does not add
+    columns to an existing table, so add it here."""
+    columns = {r[1] for r in conn.execute("PRAGMA table_info(statements)")}
+    if "page_missing_since" not in columns:
+        conn.execute("ALTER TABLE statements ADD COLUMN page_missing_since TEXT")
+        # Recent statements with only a short text may have lost their page before this
+        # column existed: give them the same 2 days of retries (a teaser is < 1500 chars).
+        since = (datetime.now(UTC) - timedelta(days=2)).isoformat()
+        conn.execute("UPDATE statements SET page_missing_since=fetched_at"
+                     " WHERE fetched_at >= ? AND LENGTH(COALESCE(text, '')) < 1500", (since,))
+        conn.commit()
 
 
 @contextmanager

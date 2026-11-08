@@ -53,6 +53,8 @@ def extract_pending(conn: sqlite3.Connection, catalog: Catalog, llm: LLM, model:
             continue
         save_extraction(conn, row["id"], text, result)
         done += 1
+        if done % 25 == 0:
+            log.info("extracted %d of %d statements", done, len(rows))
     return done
 
 
