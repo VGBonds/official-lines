@@ -59,7 +59,10 @@ Optional, recommended: in the server's **Backups** tab, enable Hetzner backups (
 The site works on the bare IP address over plain HTTP. For a real launch you want a domain (e.g. from Cloudflare Registrar, Namecheap or INWX, about €10 a year):
 
 - At your registrar, create an **A record** for your domain (or a subdomain) pointing to `SERVER_IP`.
+- Do the same for `www` if you want www.your-domain to work (the setup script redirects it to the bare domain).
+- **Check for AAAA records** (IPv6). Registrars, Hetzner included, often create them pointing at their own parking or webhosting server. Most devices prefer IPv6, so visitors then land on that server and see a 404 or nothing, while everything looks fine over IPv4. Set each AAAA record (`@` and `www`) to your server's IPv6 address, shown in the Hetzner console next to the IPv4 (ending in `::1`), or delete them.
 - Wait a few minutes. With the domain in place, Caddy gets an HTTPS certificate by itself.
+- Test both paths: `curl -sI -4 https://your-domain | head -1` and `curl -sI -6 https://your-domain | head -1` should both print `HTTP/2 200`.
 
 ## 4. Set up the server
 
