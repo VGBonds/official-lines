@@ -1,7 +1,7 @@
 # Things to consider:
 
 ## 1. Notable patterns
-The section is very interesting and worth expanding I think. 
+The section is alluring and worth expanding, I think. 
 
 example:
 
