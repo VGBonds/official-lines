@@ -3,9 +3,9 @@ from pathlib import Path
 
 import pytest
 
-from parallax.catalog import load_catalog
-from parallax.db import connect
-from parallax.llm.schemas import (
+from official_lines.catalog import load_catalog
+from official_lines.db import connect
+from official_lines.llm.schemas import (
     Assignment,
     Claim,
     EventAnalysis,

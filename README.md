@@ -1,8 +1,8 @@
-# Parallax
+# Official Lines
 
 **Same event, every official angle.**
 
-Parallax collects what governments and international organisations *officially* say (heads of government, foreign and finance ministries, central banks, the UN, IMF, World Bank, WHO, EU, NATO, BRICS, African Union, ASEAN and others), groups their statements by event, and shows side by side where the official lines agree, where they contradict each other, and who stays silent.
+Official Lines collects what governments and international organisations *officially* say (heads of government, foreign and finance ministries, central banks, the UN, IMF, World Bank, WHO, EU, NATO, BRICS, African Union, ASEAN and others), groups their statements by event, and shows side by side where the official lines agree, where they contradict each other, and who stays silent.
 
 It does not judge truth. It shows the positions so that readers can judge for themselves. Unusual agreement and unusual disagreement are both flagged.
 
@@ -22,9 +22,9 @@ Everything is Python. One small server, one SQLite file, a static website. Targe
 ```bash
 uv sync                      # install (once)
 cp .env.example .env         # then paste your Anthropic API key into .env
-uv run parallax collect      # fetch statements (no AI, free)
-uv run parallax run          # full pipeline: collect, AI steps, build the site
-uv run parallax serve        # open http://localhost:8000
+uv run official-lines collect      # fetch statements (no AI, free)
+uv run official-lines run          # full pipeline: collect, AI steps, build the site
+uv run official-lines serve        # open http://localhost:8000
 ```
 
 New to all of this? Start with **[docs/getting-started.md](docs/getting-started.md)**.
@@ -45,17 +45,17 @@ New to all of this? Start with **[docs/getting-started.md](docs/getting-started.
 
 | Command | What it does |
 |---|---|
-| `uv run parallax sources` | List all sources and whether their last fetch worked |
-| `uv run parallax collect` | Fetch new statements (`--source ID` for just one) |
-| `uv run parallax extract` | AI step 1: read new statements |
-| `uv run parallax group` | AI step 2: group statement parts (one issue each) into events |
-| `uv run parallax analyze` | AI step 3: compare actors on events (`--event SLUG` for one) |
-| `uv run parallax build` | Generate the website into `site/` |
-| `uv run parallax run` | All of the above, in order (this is what the server runs every 3 hours) |
-| `uv run parallax brief` | Draft the weekly newsletter into `data/briefs/` |
-| `uv run parallax feature SLUG` | Mark an event as an editor's pick (`unfeature` to undo) |
-| `uv run parallax costs` | AI spend this month, by step |
-| `uv run parallax serve` | Preview the site locally |
+| `uv run official-lines sources` | List all sources and whether their last fetch worked |
+| `uv run official-lines collect` | Fetch new statements (`--source ID` for just one) |
+| `uv run official-lines extract` | AI step 1: read new statements |
+| `uv run official-lines group` | AI step 2: group statement parts (one issue each) into events |
+| `uv run official-lines analyze` | AI step 3: compare actors on events (`--event SLUG` for one) |
+| `uv run official-lines build` | Generate the website into `site/` |
+| `uv run official-lines run` | All of the above, in order (this is what the server runs every 3 hours) |
+| `uv run official-lines brief` | Draft the weekly newsletter into `data/briefs/` |
+| `uv run official-lines feature SLUG` | Mark an event as an editor's pick (`unfeature` to undo) |
+| `uv run official-lines costs` | AI spend this month, by step |
+| `uv run official-lines serve` | Preview the site locally |
 
 ## Ground rules (do not "improve" these away)
 

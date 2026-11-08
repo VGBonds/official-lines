@@ -12,10 +12,10 @@ from dataclasses import dataclass
 
 import httpx
 
-from parallax.catalog import Catalog, Source
-from parallax.collect.http import Blocked, PoliteClient
-from parallax.collect.parsers import Item, parse_article, parse_feed, parse_listing
-from parallax.db import now_iso, transaction
+from official_lines.catalog import Catalog, Source
+from official_lines.collect.http import Blocked, PoliteClient
+from official_lines.collect.parsers import Item, parse_article, parse_feed, parse_listing
+from official_lines.db import now_iso, transaction
 
 log = logging.getLogger(__name__)
 

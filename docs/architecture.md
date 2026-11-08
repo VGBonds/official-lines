@@ -13,12 +13,12 @@ collect ──► extract ──► group ──► analyze ──► build
                         parts
 ```
 
-`parallax run` executes all five in order. Each step only processes what is new, so running it twice is harmless. If the AI budget is reached, the AI steps are skipped and collection and the site keep going.
+`official-lines run` executes all five in order. Each step only processes what is new, so running it twice is harmless. If the AI budget is reached, the AI steps are skipped and collection and the site keep going.
 
 ## Code map
 
 ```
-parallax/
+official_lines/
   cli.py              commands (argparse); start reading here
   config.py           settings from .env, model prices
   catalog.py          loads + validates sources/actors.yaml and sources/sources.yaml
@@ -47,7 +47,7 @@ deploy/               server setup script, systemd timers, Caddy config, push.sh
 tests/                offline tests; tests/conftest.py has the stand-in AI (FakeLLM)
 ```
 
-## Database (`data/parallax.db`)
+## Database (`data/official-lines.db`)
 
 | Table | One row per | Key columns |
 |---|---|---|
@@ -57,7 +57,7 @@ tests/                offline tests; tests/conftest.py has the stand-in AI (Fake
 | `events` | event | slug, title, summary, featured, analysis (JSON: AI output + metrics) |
 | `llm_calls` | AI call | purpose, model, tokens, cost_usd |
 
-Look inside with `sqlite3 data/parallax.db`, e.g. `SELECT actor, COUNT(*) FROM statements GROUP BY actor;`.
+Look inside with `sqlite3 data/official-lines.db`, e.g. `SELECT actor, COUNT(*) FROM statements GROUP BY actor;`.
 
 The schema has a version number (`PRAGMA user_version`). `db.py` upgrades an older database on the next run; version 1 to 2 keeps every collected statement but redoes extraction, events and analyses.
 

@@ -1,7 +1,7 @@
 """The weekly brief: a Markdown draft for the newsletter, written by the stronger model.
 
 You (the editor) review and edit the draft, then paste it into Substack. Featured events
-(`parallax feature <slug>`) are always included; the rest are ranked by how many actors
+(`official-lines feature <slug>`) are always included; the rest are ranked by how many actors
 spoke and how contested the event is.
 """
 
@@ -10,10 +10,10 @@ import sqlite3
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
-from parallax.catalog import Catalog
-from parallax.db import loads
-from parallax.llm import prompts
-from parallax.llm.client import LLM
+from official_lines.catalog import Catalog
+from official_lines.db import loads
+from official_lines.llm import prompts
+from official_lines.llm.client import LLM
 
 MAX_EVENTS = 6
 

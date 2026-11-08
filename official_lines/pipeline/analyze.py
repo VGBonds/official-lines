@@ -14,13 +14,13 @@ from datetime import UTC, datetime, timedelta
 
 import anthropic
 
-from parallax.catalog import Catalog
-from parallax.db import dumps, loads, now_iso, transaction
-from parallax.llm import prompts
-from parallax.llm.client import LLM, LLMError
-from parallax.llm.schemas import EventAnalysis
-from parallax.pipeline import metrics
-from parallax.pipeline.events import PART_COLUMNS
+from official_lines.catalog import Catalog
+from official_lines.db import dumps, loads, now_iso, transaction
+from official_lines.llm import prompts
+from official_lines.llm.client import LLM, LLMError
+from official_lines.llm.schemas import EventAnalysis
+from official_lines.pipeline import metrics
+from official_lines.pipeline.events import PART_COLUMNS
 
 log = logging.getLogger(__name__)
 

@@ -1,4 +1,4 @@
-"""Command line: `uv run parallax <command>`. Run `uv run parallax --help` for the list."""
+"""Command line: `uv run official-lines <command>`; `uv run official-lines --help` lists them."""
 
 import argparse
 import functools
@@ -6,13 +6,13 @@ import http.server
 import logging
 import sys
 
-from parallax.catalog import load_catalog
-from parallax.config import get_settings
-from parallax.db import connect, now_iso, transaction
+from official_lines.catalog import load_catalog
+from official_lines.config import get_settings
+from official_lines.db import connect, now_iso, transaction
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="parallax", description=__doc__)
+    parser = argparse.ArgumentParser(prog="official-lines", description=__doc__)
     parser.add_argument("-v", "--verbose", action="store_true")
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -49,12 +49,12 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def _llm(settings, conn):
-    from parallax.llm.client import AnthropicLLM
+    from official_lines.llm.client import AnthropicLLM
     return AnthropicLLM(conn, settings.monthly_budget_usd)
 
 
 def cmd_sources(args, settings, catalog, conn):
-    from parallax.collect.run import sync_sources
+    from official_lines.collect.run import sync_sources
     sync_sources(conn, catalog)
     health = {r["id"]: r for r in conn.execute("SELECT * FROM sources")}
     for s in sorted(catalog.sources, key=lambda s: s.id):
@@ -69,8 +69,8 @@ def cmd_sources(args, settings, catalog, conn):
 
 
 def cmd_collect(args, settings, catalog, conn):
-    from parallax.collect.http import PoliteClient
-    from parallax.collect.run import collect
+    from official_lines.collect.http import PoliteClient
+    from official_lines.collect.run import collect
     client = PoliteClient(settings.user_agent)
     try:
         results = collect(conn, catalog, client, settings.max_new_items_per_source,
@@ -83,14 +83,14 @@ def cmd_collect(args, settings, catalog, conn):
 
 
 def cmd_extract(args, settings, catalog, conn):
-    from parallax.pipeline.extract import extract_pending
+    from official_lines.pipeline.extract import extract_pending
     n = extract_pending(conn, catalog, _llm(settings, conn), settings.extract_model,
                         getattr(args, "limit", None) or settings.max_extract_per_run)
     print(f"extracted {n} statements")
 
 
 def cmd_group(args, settings, catalog, conn):
-    from parallax.pipeline.events import group_pending, merge_duplicates
+    from official_lines.pipeline.events import group_pending, merge_duplicates
     llm = _llm(settings, conn)
     n = group_pending(conn, catalog, llm, settings.extract_model)
     merged = merge_duplicates(conn, llm, settings.extract_model)
@@ -98,20 +98,20 @@ def cmd_group(args, settings, catalog, conn):
 
 
 def cmd_analyze(args, settings, catalog, conn):
-    from parallax.pipeline.analyze import analyze_due
+    from official_lines.pipeline.analyze import analyze_due
     n = analyze_due(conn, catalog, _llm(settings, conn), settings.analyze_model,
                     settings.max_analyses_per_day, only_slug=getattr(args, "event", None))
     print(f"analysed {n} events")
 
 
 def cmd_build(args, settings, catalog, conn):
-    from parallax.site.build import build_site
+    from official_lines.site.build import build_site
     n = build_site(conn, catalog, settings.site_dir, settings.site_url, settings.briefs_dir)
     print(f"built {n} pages in {settings.site_dir}")
 
 
 def cmd_run(args, settings, catalog, conn):
-    from parallax.llm.client import BudgetExceeded
+    from official_lines.llm.client import BudgetExceeded
     cmd_collect(args, settings, catalog, conn)
     if not args.no_llm:
         try:
@@ -124,14 +124,14 @@ def cmd_run(args, settings, catalog, conn):
 
 
 def cmd_brief(args, settings, catalog, conn):
-    from parallax.pipeline.brief import write_brief
+    from official_lines.pipeline.brief import write_brief
     path = write_brief(conn, catalog, _llm(settings, conn), settings.analyze_model,
                        settings.site_url, settings.briefs_dir, days=args.days)
     if path is None:
         print("no analysed events in that period; nothing to write")
         return 1
-    print(f"draft written to {path}\nEdit it, then run `uv run parallax build` to publish it on "
-          f"the site and paste it into Substack.")
+    print(f"draft written to {path}\nEdit it, then run `uv run official-lines build` to publish "
+          f"it on the site and paste it into Substack.")
 
 
 def cmd_feature(args, settings, catalog, conn, value=1):
@@ -144,7 +144,7 @@ def cmd_feature(args, settings, catalog, conn, value=1):
 
 
 def cmd_costs(args, settings, catalog, conn):
-    from parallax.llm.client import month_spend
+    from official_lines.llm.client import month_spend
     month = now_iso()[:7]
     print(f"{'step':10} {'model':20} {'calls':>6} {'in tok':>10} {'out tok':>10} {'USD':>8}")
     for r in conn.execute(

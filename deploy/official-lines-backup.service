@@ -1,0 +1,8 @@
+[Unit]
+Description=Nightly backup of the Official Lines database (keeps 14 days)
+
+[Service]
+Type=oneshot
+User=official-lines
+WorkingDirectory=/home/official-lines/official-lines
+ExecStart=/bin/bash -c 'mkdir -p data/backups && sqlite3 data/official-lines.db ".backup data/backups/official-lines-$(date +%%F).db" && gzip -f data/backups/official-lines-$(date +%%F).db && find data/backups -name "*.gz" -mtime +14 -delete'

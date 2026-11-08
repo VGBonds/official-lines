@@ -1,5 +1,5 @@
 [Unit]
-Description=Run the Parallax pipeline every 3 hours
+Description=Run the Official Lines pipeline every 3 hours
 
 [Timer]
 OnCalendar=*-*-* 00/3:20:00

@@ -1,0 +1,12 @@
+[Unit]
+Description=Official Lines pipeline: collect, extract, group, analyze, build site
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=official-lines
+WorkingDirectory=/home/official-lines/official-lines
+ExecStart=/home/official-lines/.local/bin/uv run --frozen official-lines run
+TimeoutStartSec=2h
+Nice=10

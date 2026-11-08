@@ -1,14 +1,14 @@
 # Deployment on Hetzner
 
-The goal: a small server that runs the pipeline every 3 hours and serves the website, for about €5 a month. This guide assumes you have never set up a server.
+The goal: a small server that runs the pipeline every 3 hours and serves the website, for under €10 a month. This guide assumes you have never set up a server.
 
 What you will end up with:
 
 ```
 Hetzner server (Ubuntu)
-├── systemd timer ── every 3 h ──► uv run parallax run ──► writes ~/parallax/site/
+├── systemd timer ── every 3 h ──► uv run official-lines run ──► writes ~/official-lines/site/
 ├── systemd timer ── nightly ───► database backup (14 days kept)
-└── Caddy web server ──────────► serves ~/parallax/site/ over HTTPS
+└── Caddy web server ──────────► serves ~/official-lines/site/ over HTTPS
 ```
 
 ## 1. An SSH key (once, on your laptop)
@@ -33,14 +33,24 @@ cat ~/.ssh/id_ed25519.pub
 
 ## 2. Create the server
 
-1. Sign up at **console.hetzner.cloud** and create a project called `parallax`.
+1. Sign up at **console.hetzner.cloud** and create a project called `official-lines`.
 2. **Add Server**:
    - Location: any EU location (e.g. Falkenstein or Nuremberg).
    - Image: **Ubuntu 24.04**.
-   - Type: **CX22** (2 vCPU, 4 GB RAM), about €4–5 a month. Plenty for Parallax.
+   - Type: **CX23** (2 vCPU x86, 4 GB RAM), about €8 a month including IPv4. Plenty for Official Lines. If it shows as unavailable, try another location, or take a **CAX11** (ARM) or **CPX12**; both work unchanged.
    - SSH key: paste the line from step 1.
-   - Name: `parallax`.
+   - Name: `official-lines`.
+   - New Hetzner accounts are sometimes held for verification; a small prepaid top-up usually unlocks them.
 3. Create it, and note its **IPv4 address** (e.g. `203.0.113.10`). Below we write it as `SERVER_IP`.
+
+**Forgot the SSH key?** Hetzner then emails a root password instead. Don't use the web console (pasting doesn't work there). In your Mac's Terminal, log in once with that password (`ssh root@SERVER_IP`; nothing is shown while you paste, and you may be asked to set a new one), `exit`, then install your key and check that it logs in without a password:
+
+```bash
+ssh-copy-id -i ~/.ssh/id_ed25519.pub root@SERVER_IP
+ssh root@SERVER_IP
+```
+
+No password email? Server page → **Rescue** → **Reset root password**.
 
 Optional, recommended: in the server's **Backups** tab, enable Hetzner backups (+20% of the server price) for whole-server snapshots.
 
@@ -60,7 +70,7 @@ scp -r deploy root@SERVER_IP:/root/
 ssh root@SERVER_IP "bash /root/deploy/setup-server.sh YOUR_DOMAIN_OR_SERVER_IP"
 ```
 
-The first time, SSH asks whether you trust the server; type `yes`. The script takes 2–3 minutes. It installs the firewall, automatic security updates, the Caddy web server and uv, creates a `parallax` user (the pipeline never runs as root), and switches on the timers.
+The first time, SSH asks whether you trust the server; type `yes`. The script takes 2–3 minutes. It switches SSH to key-only login (no passwords; skipped if no key is installed), installs the firewall, automatic security updates, the Caddy web server and uv, creates a `official-lines` user (the pipeline never runs as root), and switches on the timers.
 
 ## 5. Send the code
 
@@ -74,16 +84,16 @@ Run this again whenever you change code or the source catalog. It never touches 
 
 ## 6. Settings on the server
 
-Create a **second** API key in the Anthropic Console (workspace `parallax`, name `parallax-server`). Then log in as the app user and create the settings file:
+Create a **second** API key in the Anthropic Console (workspace `official-lines`, name `official-lines-server`). Then log in as the app user and create the settings file:
 
 ```bash
-ssh parallax@SERVER_IP
-cd parallax
+ssh official-lines@SERVER_IP
+cd official-lines
 cp .env.example .env
 nano .env
 ```
 
-In nano, fill in `ANTHROPIC_API_KEY=` and `PARALLAX_SITE_URL=https://your-domain` (or `http://SERVER_IP`). Save with **Ctrl+O, Enter**, quit with **Ctrl+X**. Then lock the file so only the app user can read it:
+In nano, fill in `ANTHROPIC_API_KEY=` and `OFFICIAL_LINES_SITE_URL=https://your-domain` (or `http://SERVER_IP`). Save with **Ctrl+O, Enter**, quit with **Ctrl+X**. Then lock the file so only the app user can read it:
 
 ```bash
 chmod 600 .env
@@ -91,27 +101,27 @@ chmod 600 .env
 
 ## 7. First run and check
 
-Still logged in as `parallax`:
+Still logged in as `official-lines`:
 
 ```bash
-uv run parallax run
+uv run official-lines run
 ```
 
 Open `https://your-domain` (or `http://SERVER_IP`) in a browser. From now on the timer runs every 3 hours by itself.
 
 ## Everyday server commands
 
-Log in with `ssh parallax@SERVER_IP` first.
+Log in with `ssh official-lines@SERVER_IP` first.
 
 | Task | Command |
 |---|---|
-| When does the next run happen? | `systemctl list-timers 'parallax*'` |
-| Log of the latest runs | `journalctl -u parallax-run -n 100 --no-pager` |
-| Follow a run live | `journalctl -u parallax-run -f` |
-| Run the pipeline now | `cd parallax && uv run parallax run` |
-| AI spend this month | `cd parallax && uv run parallax costs` |
-| Pause the schedule | from your laptop: `ssh root@SERVER_IP systemctl stop parallax-run.timer` |
-| Resume the schedule | from your laptop: `ssh root@SERVER_IP systemctl start parallax-run.timer` |
+| When does the next run happen? | `systemctl list-timers 'official-lines*'` |
+| Log of the latest runs | `journalctl -u official-lines-run -n 100 --no-pager` |
+| Follow a run live | `journalctl -u official-lines-run -f` |
+| Run the pipeline now | `cd official-lines && uv run official-lines run` |
+| AI spend this month | `cd official-lines && uv run official-lines costs` |
+| Pause the schedule | from your laptop: `ssh root@SERVER_IP systemctl stop official-lines-run.timer` |
+| Resume the schedule | from your laptop: `ssh root@SERVER_IP systemctl start official-lines-run.timer` |
 
 ## Updating
 
@@ -120,27 +130,27 @@ Log in with `ssh parallax@SERVER_IP` first.
 
 ## Restoring a backup
 
-Backups are in `~/parallax/data/backups/` on the server, one per night, kept for 14 days. To restore one:
+Backups are in `~/official-lines/data/backups/` on the server, one per night, kept for 14 days. To restore one:
 
 ```bash
-ssh parallax@SERVER_IP
-cd parallax
-gunzip -k data/backups/parallax-2026-11-20.db.gz
-mv data/parallax.db data/parallax-broken.db
-mv data/backups/parallax-2026-11-20.db data/parallax.db
+ssh official-lines@SERVER_IP
+cd official-lines
+gunzip -k data/backups/official-lines-2026-11-20.db.gz
+mv data/official-lines.db data/official-lines-broken.db
+mv data/backups/official-lines-2026-11-20.db data/official-lines.db
 ```
 
 To keep a copy on your laptop as well:
 
 ```bash
-scp parallax@SERVER_IP:parallax/data/backups/*.gz ~/parallax-backups/
+scp official-lines@SERVER_IP:official-lines/data/backups/*.gz ~/official-lines-backups/
 ```
 
 ## Monthly cost
 
 | Item | Cost |
 |---|---|
-| Hetzner CX22 | ~€4–5 |
+| Hetzner CX23 | ~€8 |
 | Hetzner backups (optional) | ~€1 |
 | Domain | ~€1 (€10–15 a year) |
-| Anthropic API | $15–35, capped by `PARALLAX_MONTHLY_BUDGET_USD` |
+| Anthropic API | $15–35, capped by `OFFICIAL_LINES_MONTHLY_BUDGET_USD` |

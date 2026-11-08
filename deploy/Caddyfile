@@ -1,7 +1,7 @@
 # Caddy serves the generated static site. With a real domain it fetches HTTPS certificates
 # by itself. With only an IP address, setup-server.sh writes ":80" here (plain HTTP).
 YOUR_DOMAIN {
-	root * /home/parallax/parallax/site
+	root * /home/official-lines/official-lines/site
 	file_server
 	encode zstd gzip
 	header /static/* Cache-Control "public, max-age=3600"

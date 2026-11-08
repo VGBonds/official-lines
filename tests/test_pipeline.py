@@ -4,14 +4,14 @@ import json
 
 import pytest
 
-from parallax.collect.run import sync_sources
-from parallax.db import now_iso
-from parallax.llm.client import AnthropicLLM, BudgetExceeded
-from parallax.pipeline.analyze import analyze_due
-from parallax.pipeline.brief import write_brief
-from parallax.pipeline.events import group_pending
-from parallax.pipeline.extract import extract_pending
-from parallax.site.build import build_site
+from official_lines.collect.run import sync_sources
+from official_lines.db import now_iso
+from official_lines.llm.client import AnthropicLLM, BudgetExceeded
+from official_lines.pipeline.analyze import analyze_due
+from official_lines.pipeline.brief import write_brief
+from official_lines.pipeline.events import group_pending
+from official_lines.pipeline.extract import extract_pending
+from official_lines.site.build import build_site
 from tests.conftest import FakeLLM
 
 RESTRAINT = "We call on all parties to exercise maximum restraint and avoid escalation now."
@@ -111,8 +111,8 @@ def test_budget_guard(conn):
 
 
 def test_merge_duplicates(filled, catalog):
-    from parallax.llm.schemas import Merge, Merges
-    from parallax.pipeline.events import apply_merges
+    from official_lines.llm.schemas import Merge, Merges
+    from official_lines.pipeline.events import apply_merges
     now = now_iso()
     ids = [filled.execute("INSERT INTO events (slug, title, created_at, last_seen) VALUES"
                           " (?, 'x', ?, ?)", (f"e{i}", now, now)).lastrowid for i in range(3)]
@@ -132,7 +132,7 @@ def test_merge_duplicates(filled, catalog):
 
 
 def test_locate_parts():
-    from parallax.pipeline.extract import locate_parts
+    from official_lines.pipeline.extract import locate_parts
     from tests.conftest import strait_part, trade_part
     spans = locate_parts(BRIEFING, [strait_part("Q: on the  strait"), trade_part()])
     first, second = (BRIEFING[a:b] for a, b in spans)
@@ -148,7 +148,7 @@ def test_locate_parts():
 def test_migration_from_v1(tmp_path):
     import sqlite3
 
-    from parallax.db import connect
+    from official_lines.db import connect
     path = tmp_path / "old.db"
     old = sqlite3.connect(path)
     old.executescript("""

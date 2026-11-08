@@ -46,7 +46,7 @@ class Settings:
 
     @property
     def db_path(self) -> Path:
-        return self.data_dir / "parallax.db"
+        return self.data_dir / "official-lines.db"
 
     @property
     def briefs_dir(self) -> Path:
@@ -62,18 +62,19 @@ def get_settings() -> Settings:
     load_dotenv(PROJECT_ROOT / ".env")
     env = os.environ.get
     return Settings(
-        data_dir=_path("PARALLAX_DATA_DIR", "data"),
-        site_dir=_path("PARALLAX_SITE_DIR", "site"),
-        sources_dir=_path("PARALLAX_SOURCES_DIR", "sources"),
-        site_url=env("PARALLAX_SITE_URL", "http://localhost:8000").rstrip("/"),
-        monthly_budget_usd=float(env("PARALLAX_MONTHLY_BUDGET_USD", "40")),
-        extract_model=env("PARALLAX_EXTRACT_MODEL", "claude-haiku-5-5"),
-        analyze_model=env("PARALLAX_ANALYZE_MODEL", "claude-sonnet-5-5"),
-        max_extract_per_run=int(env("PARALLAX_MAX_EXTRACT_PER_RUN", "300")),
-        max_analyses_per_day=int(env("PARALLAX_MAX_ANALYSES_PER_DAY", "12")),
-        max_new_items_per_source=int(env("PARALLAX_MAX_NEW_ITEMS_PER_SOURCE", "15")),
+        data_dir=_path("OFFICIAL_LINES_DATA_DIR", "data"),
+        site_dir=_path("OFFICIAL_LINES_SITE_DIR", "site"),
+        sources_dir=_path("OFFICIAL_LINES_SOURCES_DIR", "sources"),
+        site_url=env("OFFICIAL_LINES_SITE_URL", "http://localhost:8000").rstrip("/"),
+        monthly_budget_usd=float(env("OFFICIAL_LINES_MONTHLY_BUDGET_USD", "40")),
+        extract_model=env("OFFICIAL_LINES_EXTRACT_MODEL", "claude-haiku-5-5"),
+        analyze_model=env("OFFICIAL_LINES_ANALYZE_MODEL", "claude-sonnet-5-5"),
+        max_extract_per_run=int(env("OFFICIAL_LINES_MAX_EXTRACT_PER_RUN", "300")),
+        max_analyses_per_day=int(env("OFFICIAL_LINES_MAX_ANALYSES_PER_DAY", "12")),
+        max_new_items_per_source=int(env("OFFICIAL_LINES_MAX_NEW_ITEMS_PER_SOURCE", "15")),
         user_agent=env(
-            "PARALLAX_USER_AGENT",
-            "Mozilla/5.0 (compatible; ParallaxBot/0.1; research; +https://github.com/VGBonds/parallax)",
+            "OFFICIAL_LINES_USER_AGENT",
+            "Mozilla/5.0 (compatible; OfficialLinesBot/0.1; research;"
+            " +https://github.com/VGBonds/official-lines)",
         ),
     )

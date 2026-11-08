@@ -13,10 +13,10 @@ from pathlib import Path
 import markdown
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-from parallax.catalog import Catalog, on_map
-from parallax.config import PROJECT_ROOT
-from parallax.db import loads
-from parallax.pipeline.events import PART_COLUMNS
+from official_lines.catalog import Catalog, on_map
+from official_lines.config import PROJECT_ROOT
+from official_lines.db import loads
+from official_lines.pipeline.events import PART_COLUMNS
 
 HERE = Path(__file__).parent
 INDEX_DAYS = 45

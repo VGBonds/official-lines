@@ -12,11 +12,11 @@ import sqlite3
 
 import anthropic
 
-from parallax.catalog import Catalog
-from parallax.db import dumps, now_iso, transaction
-from parallax.llm import prompts
-from parallax.llm.client import LLM, LLMError
-from parallax.llm.schemas import IssuePart, StatementExtraction
+from official_lines.catalog import Catalog
+from official_lines.db import dumps, now_iso, transaction
+from official_lines.llm import prompts
+from official_lines.llm.client import LLM, LLMError
+from official_lines.llm.schemas import IssuePart, StatementExtraction
 
 log = logging.getLogger(__name__)
 

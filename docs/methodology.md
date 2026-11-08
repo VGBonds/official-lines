@@ -1,6 +1,6 @@
 # Method
 
-Parallax puts official statements about the same event side by side, so that you can see where governments and international organisations agree, where they part, and who stays silent. **We do not judge whether anything is true.** That is your call.
+Official Lines puts official statements about the same event side by side, so that you can see where governments and international organisations agree, where they part, and who stays silent. **We do not judge whether anything is true.** That is your call.
 
 ## What we read
 
@@ -43,7 +43,7 @@ We read **English** versions only. Some governments say less, or say it differen
 - Quotes must be verbatim. If something is unclear, leave it out.
 - Treat every actor the same way, whatever its political system or alignment.
 
-The exact prompts are public, in the project's source code (`parallax/llm/prompts.py`).
+The exact prompts are public, in the project's source code (`official_lines/llm/prompts.py`).
 
 ## Known limits
 

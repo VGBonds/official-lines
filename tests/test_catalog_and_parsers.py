@@ -2,8 +2,8 @@ from pathlib import Path
 
 import pytest
 
-from parallax.catalog import Catalog, CatalogError, Source, load_catalog, on_map, validate
-from parallax.collect.parsers import normalize_url, parse_feed, parse_listing, to_iso
+from official_lines.catalog import Catalog, CatalogError, Source, load_catalog, on_map, validate
+from official_lines.collect.parsers import normalize_url, parse_feed, parse_listing, to_iso
 
 FIXTURES = Path(__file__).parent / "fixtures"
 REPO = Path(__file__).parent.parent
@@ -67,7 +67,7 @@ def test_normalize_and_dates():
 
 
 def test_placeholder_pages_are_not_statements():
-    from parallax.collect.parsers import parse_article
+    from official_lines.collect.parsers import parse_article
     html = ("<html><head><title>x</title></head><body><p>JavaScript is disabled in your "
             "browser. Please enable JavaScript to proceed.</p></body></html>")
     assert parse_article(html, "https://example.org/a").text is None

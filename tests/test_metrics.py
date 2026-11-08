@@ -1,4 +1,4 @@
-from parallax.pipeline import metrics
+from official_lines.pipeline import metrics
 
 
 def pos(actor, pid, stance):

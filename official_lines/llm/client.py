@@ -1,7 +1,7 @@
 """Thin wrapper around the Anthropic API: structured output, cost ledger, budget guard.
 
 Every call is logged in the `llm_calls` table. Before each call we add up this month's spend;
-past PARALLAX_MONTHLY_BUDGET_USD we refuse to call the API (BudgetExceeded).
+past OFFICIAL_LINES_MONTHLY_BUDGET_USD we refuse to call the API (BudgetExceeded).
 """
 
 import sqlite3
@@ -11,8 +11,8 @@ from typing import Protocol, TypeVar
 import anthropic
 from pydantic import BaseModel
 
-from parallax.config import PRICES_PER_MTOK
-from parallax.db import now_iso, transaction
+from official_lines.config import PRICES_PER_MTOK
+from official_lines.db import now_iso, transaction
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -90,7 +90,7 @@ class AnthropicLLM:
         if spent >= self.budget:
             raise BudgetExceeded(
                 f"Monthly LLM budget reached: ${spent:.2f} of ${self.budget:.2f}. "
-                "Raise PARALLAX_MONTHLY_BUDGET_USD or wait for next month."
+                "Raise OFFICIAL_LINES_MONTHLY_BUDGET_USD or wait for next month."
             )
 
     def _check_stop(self, response) -> None:

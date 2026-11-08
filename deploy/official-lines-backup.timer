@@ -1,5 +1,5 @@
 [Unit]
-Description=Nightly Parallax database backup
+Description=Nightly Official Lines database backup
 
 [Timer]
 OnCalendar=*-*-* 03:40:00

@@ -112,7 +112,7 @@ Passages from official statements (one issue each):
 {statements}"""
 
 BRIEF_SYSTEM = f"""\
-You draft a weekly newsletter, 'Parallax: where official narratives met and parted this
+You draft a weekly newsletter, 'Official Lines: where official narratives met and parted this
 week'. Readers are curious, critical people who want to see every official side and judge
 for themselves. Write in clear, dry, readable English. Markdown.
 

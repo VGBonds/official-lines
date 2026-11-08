@@ -6,8 +6,8 @@ Collect ≈15 countries and ≈15 organisations in English, group by event, comp
 
 ## Next, in rough order
 
-1. **Editor commands.** `parallax merge`, `parallax move` and `parallax split` for fixing event grouping without SQL.
-2. **Better baseline for "unusual".** Today "unusual agreement" compares against Parallax's own history, which starts empty. Seed it with **UN General Assembly voting data** (the Voeten/Bailey dataset, public), which records how closely every pair of countries has voted for decades.
+1. **Editor commands.** `official-lines merge`, `official-lines move` and `official-lines split` for fixing event grouping without SQL.
+2. **Better baseline for "unusual".** Today "unusual agreement" compares against Official Lines' own history, which starts empty. Seed it with **UN General Assembly voting data** (the Voeten/Bailey dataset, public), which records how closely every pair of countries has voted for decades.
 3. **Batch API for analysis.** Anthropic's batch API halves the price; analysis isn't urgent, so the daily comparisons could run as one batch.
 4. **Second-model audit.** Re-run a sample of comparisons with a model from another vendor and publish where they disagree. It is an honest answer to "isn't your AI biased?".
 5. **Central bank view.** Central banks are collected but off the map. A separate page could compare monetary-policy language over time (inflation, currency, sanctions): the most valuable piece for the finance audience.
@@ -25,4 +25,4 @@ Goal: cover costs first, then see whether there is more. Order of effort:
 4. **Grants: careful.** Funding from government-linked bodies (NED, EU programmes and the like) would damage credibility for a project about government messaging. Private foundations are acceptable if disclosed.
 5. **No advertising.** It conflicts with a neutral brand.
 
-Name and domain: "Parallax" is the working name. Check domain and trademark availability before launch (e.g. parallax-lines.org, officiallines.org).
+Name and domain: the project was first called "Parallax"; it was renamed to **Official Lines** (domain official-lines.com) because parallax.news already runs a news-comparison site under that name. Before launch, also check trademarks and claim the Substack and social handles.

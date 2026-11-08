@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# One-time setup of a fresh Ubuntu 24.04 server for Parallax. Run as root:
+# One-time setup of a fresh Ubuntu 24.04 server for Official Lines. Run as root:
 #   bash setup-server.sh your-domain.example
 # Safe to re-run. See docs/deployment.md for the full walkthrough.
 set -euo pipefail
 
 DOMAIN="${1:?usage: bash setup-server.sh <domain, or the server IP if you have no domain yet>}"
-APP_USER=parallax
-APP_DIR=/home/$APP_USER/parallax
+APP_USER=official-lines
+APP_DIR=/home/$APP_USER/official-lines
 
 echo "==> System packages and automatic security updates"
 apt-get update
@@ -18,6 +18,16 @@ ufw allow OpenSSH
 ufw allow 80/tcp
 ufw allow 443/tcp
 ufw --force enable
+
+echo "==> SSH: key login only (no passwords), once a key is installed"
+if [ -s /root/.ssh/authorized_keys ]; then
+  # 00- sorts before the image's own files (e.g. 50-cloud-init.conf); sshd keeps the first value
+  printf 'PasswordAuthentication no\nKbdInteractiveAuthentication no\nPermitRootLogin prohibit-password\n' \
+    > /etc/ssh/sshd_config.d/00-key-only.conf
+  sshd -t && systemctl reload ssh
+else
+  echo "    no SSH key in /root/.ssh/authorized_keys: password login left on (see docs/deployment.md)"
+fi
 
 echo "==> Caddy web server (serves the site, gets HTTPS certificates automatically)"
 if ! command -v caddy >/dev/null; then
@@ -49,9 +59,9 @@ sed "s/YOUR_DOMAIN/$SITE_ADDR/" "$(dirname "$0")/Caddyfile" > /etc/caddy/Caddyfi
 systemctl reload caddy || systemctl restart caddy
 
 echo "==> systemd timers (pipeline every 3 hours, backup nightly)"
-cp "$(dirname "$0")"/parallax-*.service "$(dirname "$0")"/parallax-*.timer /etc/systemd/system/
+cp "$(dirname "$0")"/official-lines-*.service "$(dirname "$0")"/official-lines-*.timer /etc/systemd/system/
 systemctl daemon-reload
-systemctl enable --now parallax-run.timer parallax-backup.timer
+systemctl enable --now official-lines-run.timer official-lines-backup.timer
 
 echo
 echo "Done. Next: from your laptop run deploy/push.sh, then create $APP_DIR/.env (docs/deployment.md, step 6)."

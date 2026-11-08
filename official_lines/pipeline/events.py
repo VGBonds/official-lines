@@ -17,11 +17,11 @@ from datetime import UTC, datetime, timedelta
 
 import anthropic
 
-from parallax.catalog import Catalog
-from parallax.db import now_iso, transaction
-from parallax.llm import prompts
-from parallax.llm.client import LLM, LLMError
-from parallax.llm.schemas import Grouping, Merges
+from official_lines.catalog import Catalog
+from official_lines.db import now_iso, transaction
+from official_lines.llm import prompts
+from official_lines.llm.client import LLM, LLMError
+from official_lines.llm.schemas import Grouping, Merges
 
 log = logging.getLogger(__name__)
 

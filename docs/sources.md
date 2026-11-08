@@ -1,11 +1,11 @@
 # Sources
 
-Two files decide what Parallax reads:
+Two files decide what Official Lines reads:
 
 - `sources/actors.yaml`: **who** we follow: 15 countries and about 15 organisations. Adding a country means adding a line here (with its ISO numeric code, used by the map).
 - `sources/sources.yaml`: **where** we read them: one entry per feed or press page.
 
-Run `uv run parallax sources` to check the catalog and see each source's last result. The catalog is validated on every command; mistakes are reported with the source id.
+Run `uv run official-lines sources` to check the catalog and see each source's last result. The catalog is validated on every command; mistakes are reported with the source id.
 
 ## The format
 
@@ -36,7 +36,7 @@ Rules the validator enforces:
 **A feed (easiest).** Many official sites have RSS or Atom feeds: look for an RSS icon, or for `/feed`, `/rss`, `.atom` or `.xml` addresses. Check that it works:
 
 ```bash
-curl -s -A "ParallaxBot" "https://example.gov/feed/" | head -20
+curl -s -A "OfficialLinesBot" "https://example.gov/feed/" | head -20
 ```
 
 If you see `<rss` or `<feed` and items with `<title>` and `<link>`, add it with `method: rss`.
@@ -48,11 +48,11 @@ If you see `<rss` or `<feed` and items with `<title>` and `<link>`, add it with 
 3. If the selector also catches menu links, add a `link_pattern` that only real statement addresses match (e.g. `/press-releases/`).
 4. Test it:
    ```bash
-   uv run parallax collect --source your-source-id -v
-   uv run parallax sources
+   uv run official-lines collect --source your-source-id -v
+   uv run official-lines sources
    ```
 
-Some sites build their pages with JavaScript, so the links aren't in the raw HTML. Parallax can't read those; mark them `enabled: false, status: js_only`. Same for sites that block bots (`status: blocked`). **We do not get around blocks or CAPTCHAs.** Look for another official route instead: an embassy site, a different section of the same site, or a government press office.
+Some sites build their pages with JavaScript, so the links aren't in the raw HTML. Official Lines can't read those; mark them `enabled: false, status: js_only`. Same for sites that block bots (`status: blocked`). **We do not get around blocks or CAPTCHAs.** Look for another official route instead: an embassy site, a different section of the same site, or a government press office.
 
 ## Coverage gaps are part of the product
 
@@ -62,7 +62,7 @@ Aim for balance rather than volume: a fifth White House feed adds less than a fi
 
 ## Feeds break
 
-Official sites redesign without notice. When `parallax sources` shows a source failing for days:
+Official sites redesign without notice. When `official-lines sources` shows a source failing for days:
 
 1. Open its `url` in a browser. Moved? Update the URL.
 2. A listing page whose layout changed? Find the new `link_selector`.

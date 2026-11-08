@@ -1,5 +1,5 @@
-# Parallax source catalog. Verified 2026-11-07 by probing from a residential connection.
-# UA: Mozilla/5.0 (compatible; ParallaxBot/0.1; research; +https://github.com/parallax-official-lines), 20s timeout, no JS, no challenge bypass.
+# Official Lines source catalog. Verified 2026-11-07 by probing from a residential connection.
+# UA: Mozilla/5.0 (compatible; OfficialLinesBot/0.1; research; +https://github.com/VGBonds/official-lines), 20s timeout, no JS, no challenge bypass.
 # Note: this machine's Python CA bundle fails TLS verification for most hosts (TLS-intercepting proxy?); probes used curl with the system keychain.
 sources:
 

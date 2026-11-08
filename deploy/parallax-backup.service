@@ -1,8 +1,0 @@
-[Unit]
-Description=Nightly backup of the Parallax database (keeps 14 days)
-
-[Service]
-Type=oneshot
-User=parallax
-WorkingDirectory=/home/parallax/parallax
-ExecStart=/bin/bash -c 'mkdir -p data/backups && sqlite3 data/parallax.db ".backup data/backups/parallax-$(date +%%F).db" && gzip -f data/backups/parallax-$(date +%%F).db && find data/backups -name "*.gz" -mtime +14 -delete'

@@ -10,7 +10,7 @@ cd "$(dirname "$0")/.."
 rsync -az --delete \
   --exclude .git --exclude .venv --exclude /data --exclude /site --exclude .env \
   --exclude __pycache__ --exclude .pytest_cache --exclude .ruff_cache --exclude .idea \
-  ./ "parallax@$SERVER:parallax/"
+  ./ "official-lines@$SERVER:official-lines/"
 
-ssh "parallax@$SERVER" 'cd parallax && ~/.local/bin/uv sync --frozen --no-dev'
+ssh "official-lines@$SERVER" 'cd official-lines && ~/.local/bin/uv sync --frozen --no-dev'
 echo "Code updated on $SERVER. The next scheduled run uses it."

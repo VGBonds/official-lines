@@ -1,4 +1,4 @@
-# Who Parallax follows. Sources (sources.yaml) point to one of these actors.
+# Who Official Lines follows. Sources (sources.yaml) point to one of these actors.
 #
 # countries: keyed by ISO 3166-1 alpha-2. iso_numeric is used to colour the world map.
 # orgs: international and regional organisations. They NEVER colour a country on the map,
