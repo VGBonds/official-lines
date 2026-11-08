@@ -30,6 +30,9 @@
   {% if a %}
   <section>
     <h2>Where the official lines meet and part</h2>
+    {% if e.late_actors %}
+    <p class="notice">Compared on {{ e.analysed_at | date }}. Statements from {{ e.late_names }} arrived later and are not in this table yet; they are listed below, and the comparison is updated on the next run.</p>
+    {% endif %}
     <p class="muted small">● asserts &nbsp; ◐ qualifies &nbsp; ○ denies &nbsp; blank: no stance in the statements we have. Hover or tap a symbol for the quote.</p>
     <div class="table-wrap">
     <table class="matrix">

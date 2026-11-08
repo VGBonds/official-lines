@@ -48,7 +48,7 @@ shows this month's AI spend per step. Typical month:
 
 Levers in `.env` if it gets too expensive:
 
-- `OFFICIAL_LINES_MAX_ANALYSES_PER_DAY` (default 12): the biggest lever.
+- `OFFICIAL_LINES_MAX_ANALYSES_PER_DAY` (default 12): the biggest lever. It applies twice: up to 12 new comparisons a day, and up to 12 updates of events that another actor joined after their comparison (`update` in `official-lines costs`). Worst case about $0.70 a day.
 - `OFFICIAL_LINES_MAX_EXTRACT_PER_RUN` (default 300).
 - `OFFICIAL_LINES_ANALYZE_MODEL=claude-haiku-5-5`: much cheaper, noticeably weaker comparisons.
 - `OFFICIAL_LINES_MONTHLY_BUDGET_USD`: the hard stop. Once reached, collection and the site keep working; only the AI steps pause until the 1st of next month.

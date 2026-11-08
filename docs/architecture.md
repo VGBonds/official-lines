@@ -71,7 +71,7 @@ The schema has a version number (`PRAGMA user_version`). `db.py` upgrades an old
 - **Structured outputs.** The API guarantees the JSON shape (`llm/schemas.py`), so a malformed answer can't corrupt the database.
 - **Metrics outside the AI.** The AI only records who says what, with quotes. Agreement scores and flags are plain arithmetic in `metrics.py`, readable and testable.
 - **Swappable model.** The pipeline only depends on the small `LLM` protocol in `llm/client.py`. Tests use a fake; another vendor could be added the same way.
-- **Two models.** The cheap one reads everything, the stronger one only compares events where at least two actors spoke, capped per day.
+- **Two models.** The cheap one reads everything, the stronger one only compares events where at least two actors spoke, capped per day. When another actor joins an event after its comparison, the event is compared again on the next run (its own daily allowance), and until then its page says which actors are not in the table yet.
 
 ## Tests
 

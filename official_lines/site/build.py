@@ -16,6 +16,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from official_lines.catalog import Catalog, on_map
 from official_lines.config import PROJECT_ROOT
 from official_lines.db import loads
+from official_lines.pipeline.analyze import late_actors
 from official_lines.pipeline.events import PART_COLUMNS
 
 HERE = Path(__file__).parent
@@ -110,10 +111,16 @@ def load_events(conn: sqlite3.Connection, catalog: Catalog) -> list[dict]:
                                if on_map(catalog.actor(s["actor"]), s["kind"])})
         e["analysis"] = loads(row["analysis"])
         e["background"] = (e["analysis"] or {}).get("llm", {}).get("background", "")
+        e["late_actors"] = late_actors(conn, row["id"], e["analysis"])
+        e["late_names"] = _and([catalog.actor(a).name for a in e["late_actors"]])
         if e["analysis"]:
             e["matrix"] = stance_matrix(e["analysis"], actor_ids)
         events.append(e)
     return events
+
+
+def _and(names: list[str]) -> str:
+    return " and ".join(names) if len(names) < 3 else ", ".join(names[:-1]) + " and " + names[-1]
 
 
 def stance_matrix(analysis: dict, actor_ids: list[str]) -> dict:

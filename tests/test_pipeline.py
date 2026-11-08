@@ -172,3 +172,42 @@ def test_migration_from_v1(tmp_path):
     assert "event_id" not in row.keys()
     assert conn.execute("SELECT COUNT(*) FROM events").fetchone()[0] == 0
     connect(path)  # a second connect is a no-op
+
+
+def test_new_actor_triggers_update(filled, catalog, tmp_path):
+    """A compared event that a new actor joins is compared again on the next run, even when
+    the day's new comparisons are used up; until then the page says who is missing."""
+    llm = FakeLLM()
+    extract_pending(filled, catalog, llm, "m", limit=100)
+    group_pending(filled, catalog, llm, "m")
+    assert analyze_due(filled, catalog, llm, "m", max_per_day=5) == 1
+    strait = filled.execute("SELECT id, slug FROM events WHERE title='Strait incident'").fetchone()
+
+    # Russia speaks later; its passage lands in the already compared event.
+    sid = filled.execute(
+        "INSERT INTO statements (source_id, actor, kind, url, title, published_at, fetched_at,"
+        " text, extracted_at, relevant) VALUES ('ru-cbr', 'RU', 'central_bank', 'https://x/ru',"
+        " 'Russia on the strait', ?, ?, ?, ?, 1)", (now_iso(), now_iso(), RESTRAINT, now_iso()),
+    ).lastrowid
+    filled.execute("INSERT INTO parts (statement_id, idx, issue, summary, data, text_start,"
+                   " text_end, event_id) VALUES (?, 0, 'Strait incident', 'Russia comments.',"
+                   " '{}', 0, ?, ?)", (sid, len(RESTRAINT), strait["id"]))
+    filled.commit()
+
+    out = tmp_path / "site"
+    build_site(filled, catalog, out, "https://p.example", tmp_path / "briefs")
+    page = (out / "event" / f"{strait['slug']}.html").read_text()
+    assert f"Statements from {catalog.actor('RU').name} arrived later" in page
+
+    for _ in range(5):  # today's new comparisons are used up
+        filled.execute("INSERT INTO llm_calls (at, purpose, model, input_tokens, output_tokens,"
+                       " cost_usd) VALUES (?, 'analyze', 'm', 0, 0, 0)", (now_iso(),))
+    assert analyze_due(filled, catalog, llm, "m", max_per_day=5) == 1
+    assert llm.calls[-1] == "update"
+    analysis = json.loads(filled.execute("SELECT analysis FROM events WHERE id=?",
+                                         (strait["id"],)).fetchone()[0])
+    assert "RU" in analysis["actors"]
+    assert analyze_due(filled, catalog, llm, "m", max_per_day=5) == 0  # up to date now
+
+    build_site(filled, catalog, out, "https://p.example", tmp_path / "briefs")
+    assert "arrived later" not in (out / "event" / f"{strait['slug']}.html").read_text()

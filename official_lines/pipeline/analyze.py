@@ -1,5 +1,11 @@
 """Step 3: compare what different actors said about one event.
 
+Two queues, each with its own daily allowance (`max_per_day`):
+- updates: events compared before, that another actor has since joined. They are compared
+  again on the next run, so a comparison never stays without an actor we already have.
+- new comparisons: events where at least MIN_ACTORS actors spoke, or where the same actors
+  added statements (then at most once every REANALYSE_AFTER_HOURS).
+
 The input is the parts (one issue each) filed under the event: for each, the extracted
 claims and the passage of the original text it comes from.
 
@@ -32,12 +38,44 @@ SILENCE_LOOKBACK_DAYS = 60
 SILENCE_MIN_STATEMENTS = 2
 
 
-def analyses_today(conn: sqlite3.Connection) -> int:
+def analyses_today(conn: sqlite3.Connection, purpose: str = "analyze") -> int:
     today = datetime.now(UTC).strftime("%Y-%m-%d")
     return conn.execute(
-        "SELECT COUNT(*) FROM llm_calls WHERE purpose='analyze' AND substr(at, 1, 10)=?",
-        (today,),
+        "SELECT COUNT(*) FROM llm_calls WHERE purpose=? AND substr(at, 1, 10)=?",
+        (purpose, today),
     ).fetchone()[0]
+
+
+def analysed_actors(conn: sqlite3.Connection, analysis: dict) -> set[str]:
+    """Actors whose statements went into a stored comparison."""
+    if "actors" in analysis:
+        return set(analysis["actors"])
+    ids = analysis.get("part_ids") or []  # comparisons made before "actors" was stored
+    return {r[0] for r in conn.execute(
+        f"SELECT DISTINCT s.actor FROM parts p JOIN statements s ON s.id = p.statement_id"
+        f" WHERE p.id IN ({','.join('?' * len(ids))})", ids)} if ids else set()
+
+
+def late_actors(conn: sqlite3.Connection, event_id: int, analysis: dict | None) -> list[str]:
+    """Actors in the event now that were not in its last comparison."""
+    if not analysis:
+        return []
+    current = [r[0] for r in conn.execute(
+        """SELECT s.actor FROM parts p JOIN statements s ON s.id = p.statement_id
+           WHERE p.event_id=? GROUP BY s.actor ORDER BY MIN(COALESCE(s.published_at,
+           s.fetched_at))""", (event_id,))]
+    seen = analysed_actors(conn, analysis)
+    return [a for a in current if a not in seen]
+
+
+def updates_due(conn: sqlite3.Connection, limit: int) -> list[sqlite3.Row]:
+    rows = conn.execute(
+        """SELECT e.*, COUNT(DISTINCT s.actor) AS actors FROM events e
+           JOIN parts p ON p.event_id = e.id JOIN statements s ON s.id = p.statement_id
+           WHERE e.analysis IS NOT NULL GROUP BY e.id
+           ORDER BY e.featured DESC, actors DESC, e.last_seen DESC"""
+    ).fetchall()
+    return [r for r in rows if late_actors(conn, r["id"], loads(r["analysis"]))][:limit]
 
 
 def events_due(conn: sqlite3.Connection, limit: int) -> list[sqlite3.Row]:
@@ -58,16 +96,23 @@ def analyze_due(conn: sqlite3.Connection, catalog: Catalog, llm: LLM, model: str
                 max_per_day: int, only_slug: str | None = None) -> int:
     if only_slug:
         events = conn.execute("SELECT * FROM events WHERE slug=?", (only_slug,)).fetchall()
-    else:
-        remaining = max_per_day - analyses_today(conn)
+        return _run(conn, catalog, llm, model, events, "analyze")
+    done = 0
+    # Updates first: an updated event's analysed_at becomes now, so it is not due again below.
+    for purpose, find in (("update", updates_due), ("analyze", events_due)):
+        remaining = max_per_day - analyses_today(conn, purpose)
         if remaining <= 0:
-            log.info("daily analysis cap reached (%d)", max_per_day)
-            return 0
-        events = events_due(conn, remaining)
+            log.info("daily cap reached for %s (%d)", purpose, max_per_day)
+            continue
+        done += _run(conn, catalog, llm, model, find(conn, remaining), purpose)
+    return done
+
+
+def _run(conn, catalog, llm, model, events, purpose: str) -> int:
     done = 0
     for event in events:
         try:
-            analyze_event(conn, catalog, llm, model, event)
+            analyze_event(conn, catalog, llm, model, event, purpose)
             done += 1
         except (LLMError, anthropic.APIError) as e:
             log.warning("analysis failed for %s: %s", event["slug"], e)
@@ -89,11 +134,11 @@ def select_parts(conn: sqlite3.Connection, event_id: int) -> list[sqlite3.Row]:
 
 
 def analyze_event(conn: sqlite3.Connection, catalog: Catalog, llm: LLM, model: str,
-                  event: sqlite3.Row) -> dict:
+                  event: sqlite3.Row, purpose: str = "analyze") -> dict:
     parts = select_parts(conn, event["id"])
     user = prompts.ANALYZE_USER.format(
         title=event["title"], statements="\n\n".join(_describe(p, catalog) for p in parts))
-    result = llm.structured(purpose="analyze", model=model, system=prompts.ANALYZE_SYSTEM,
+    result = llm.structured(purpose=purpose, model=model, system=prompts.ANALYZE_SYSTEM,
                             user=user, schema=EventAnalysis, max_tokens=16000, effort="medium")
     analysis = result.model_dump()
 
@@ -104,7 +149,8 @@ def analyze_event(conn: sqlite3.Connection, catalog: Catalog, llm: LLM, model: s
     computed["silent"] = silent_actors(conn, event["id"], parts)
 
     payload = {"llm": analysis, "metrics": computed, "model": model,
-               "part_ids": [p["id"] for p in parts]}
+               "part_ids": [p["id"] for p in parts],
+               "actors": sorted({p["actor"] for p in parts})}
     total = conn.execute("SELECT COUNT(*) FROM parts WHERE event_id=?",
                          (event["id"],)).fetchone()[0]
     with transaction(conn):
