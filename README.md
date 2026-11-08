@@ -40,6 +40,7 @@ New to all of this? Start with **[docs/getting-started.md](docs/getting-started.
 | [Architecture](docs/architecture.md) | How the code is organised, the database, each pipeline step |
 | [Methodology](docs/methodology.md) | What we measure and how. Also published on the site as the "Method" page |
 | [Roadmap](docs/roadmap.md) | What comes next, and the business plan |
+| [Improvement ideas](docs/improvement-ideas.md) | Ideas under consideration and the discussion around them; the evaluation plan after launch |
 
 ## Commands
 

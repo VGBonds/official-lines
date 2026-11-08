@@ -6,6 +6,8 @@ Collect ≈15 countries and ≈15 organisations in English, group by event, comp
 
 ## Next, in rough order
 
+Ideas still under discussion are collected in [Improvement ideas](improvement-ideas.md).
+
 1. **Editor commands.** `official-lines merge`, `official-lines move` and `official-lines split` for fixing event grouping without SQL.
 2. **Sources that refuse servers.** Some sites block data-centre IP addresses (2026-11: U.S. State Department, gov.za). We do not route around such blocks. Where a site offers an official email subscription (the State Department does), an inbox that receives those emails and feeds them to the pipeline would restore coverage legitimately.
 3. **Better baseline for "unusual".** Today "unusual agreement" compares against Official Lines' own history, which starts empty. Seed it with **UN General Assembly voting data** (the Voeten/Bailey dataset, public), which records how closely every pair of countries has voted for decades.
