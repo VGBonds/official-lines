@@ -14,3 +14,15 @@ Shared wording: Germany and France use 107 identical 8-word sequences, e.g. “t
 same examples of word sequences.
 Can we have a link to explore these: patterns + counts? 
 
+## Sources
+http://government.ru/en/docs/
+
+Add Turkey, Pakistan, South-East Asia (India is blocked), Canada, Australia, Norway
+
+## use cases
+
+comparison is the best use-case but how we land there:
+1. select by topic and/or country -> see all events
+2. then filter by comparisons and/or controversiality
+3. order by date as well
+4. dive deeper into an event
