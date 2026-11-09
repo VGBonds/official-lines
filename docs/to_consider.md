@@ -32,3 +32,14 @@ comparison is the best use-case but how we land there:
 2. then filter by comparisons and/or controversiality
 3. order by date as well
 4. dive deeper into an event
+
+## same thing different words section
+
+https://official-lines.com/event/security-council-meeting-on-ukraine-following-29-october-att-591.html
+
+Same thing, different words
+Russia's military campaign in Ukraine	United Kingdom: “Russia's aggression”United Kingdom: “this war”
+
+the comparison must be with respect to 2 or more different sources. In that case we do not
+have real usage of different suggestive wording, but rather a trivial stylistic 
+wording to avoid repetitions. 
