@@ -1,6 +1,8 @@
 # Things to consider:
 
-## 1. Notable patterns
+## 1. Notable patterns ✅ resolved (bf89b44)
+> Event pages show one line per group of actors with the passage length in words; new "Shared wording" page lists pairs and passages with links. Open: minimum passage length (8 words lets names and set phrases in), to be decided after a week on the server.
+
 The section is alluring and worth expanding, I think. 
 
 example:
@@ -14,7 +16,9 @@ Shared wording: Germany and France use 107 identical 8-word sequences, e.g. “t
 same examples of word sequences.
 Can we have a link to explore these: patterns/wording + counts? 
 
-## Sources
+## Sources ⏳ open
+> Next step: probe script for the new countries, run from the server.
+
 http://government.ru/en/docs/
 
 Add 
@@ -25,7 +29,9 @@ Add
 - Australia: Oceania is underrepresented
 - Argentina/Chile: add at least one more LatAm country
 
-## use cases
+## use cases ◐ partly resolved (bf89b44)
+> Done: filter by country/organisation, compared, contested; sort by newest, most contested, most actors. Open: filter by topic (needs the fixed theme list) and a real controversiality ranking (needs the published formula).
+
 
 comparison is the best use-case but how we land there:
 1. select by topic and/or country -> see all events
@@ -33,7 +39,9 @@ comparison is the best use-case but how we land there:
 3. order by date as well
 4. dive deeper into an event
 
-## same thing different words section
+## same thing different words section ✅ resolved (bf89b44)
+> A concept now needs at least two actors using different words; applied at site build and in the prompt.
+
 
 https://official-lines.com/event/security-council-meeting-on-ukraine-following-29-october-att-591.html
 
