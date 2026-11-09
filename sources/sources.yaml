@@ -1193,9 +1193,9 @@ sources:
     url: https://www.bnm.gov.my/press-release-2026
     link_selector: "a[href]"
     link_pattern: "bnm\\.gov\\.my/-/[^/?#]+$"
-    enabled: false
-    status: candidate
-    notes: "server 2026-11-09: /press-releases redirected to the 2025 page; using the 2026 page with a pattern, check again. The URL contains the year: update it in January"
+    enabled: true
+    status: ok
+    notes: "server 2026-11-09: OK on the 2026 page, 62 links, full text (newest first). The URL contains the year: update it in January"
 
   # ---------------- Philippines
   - id: ph-dfa
