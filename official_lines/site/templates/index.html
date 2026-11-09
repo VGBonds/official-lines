@@ -20,13 +20,27 @@
     <option value="politics">Politics</option>
     <option value="economics">Economics</option>
   </select>
-  <label><input id="multi" type="checkbox" checked> Only events with 2+ actors</label>
+  <select id="actor" aria-label="Country or organisation">
+    <option value="">All countries and organisations</option>
+    {% for id, name in actor_options %}<option value="{{ id }}">{{ name }}</option>{% endfor %}
+  </select>
+  <select id="sort" aria-label="Sort">
+    <option value="last">Newest first</option>
+    <option value="contested">Most contested first</option>
+    <option value="actors">Most actors first</option>
+  </select>
+  <label><input id="multi" type="checkbox" checked> 2+ actors</label>
+  <label><input id="compared" type="checkbox"> Compared</label>
+  <label><input id="contested" type="checkbox"> Contested</label>
 </section>
 
 <ul class="events" id="events">
 {% for e in events %}
   <li class="event{% if e.featured %} featured{% endif %}"
       data-domain="{{ e.domain or '' }}" data-actors="{{ (e.countries + e.orgs) | length }}"
+      data-ids=" {{ (e.countries + e.orgs) | join(' ') }} " data-last="{{ e.last_seen or '' }}"
+      data-compared="{{ 1 if e.analysis else 0 }}"
+      data-contested="{{ e.analysis.metrics.contested | length if e.analysis else 0 }}"
       data-text="{{ (e.title ~ ' ' ~ (e.background or '') ~ ' ' ~ (e.summary or '') ~ ' ' ~ ((e.countries + e.orgs) | map('lower') | join(' '))) | lower }}">
     <div class="event-head">
       <a class="event-title" href="event/{{ e.slug }}.html">{{ e.title }}</a>
@@ -47,19 +61,32 @@
 {{ m.map_scripts(root) }}
 <script>
 (function () {
-  const q = document.getElementById('q'), d = document.getElementById('domain'),
-        multi = document.getElementById('multi');
+  const $ = id => document.getElementById(id);
+  const list = $('events'), items = Array.from(list.querySelectorAll('li.event'));
+  const controls = ['q', 'domain', 'actor', 'sort', 'multi', 'compared', 'contested'].map($);
+  const keys = {
+    last: li => li.dataset.last,
+    contested: li => Number(li.dataset.contested),
+    actors: li => Number(li.dataset.actors),
+  };
   function apply() {
-    const text = q.value.trim().toLowerCase();
-    document.querySelectorAll('#events li.event').forEach(li => {
-      const dom = li.dataset.domain;
-      const ok = (!text || li.dataset.text.includes(text))
-        && (!d.value || dom === d.value || dom === 'both')
-        && (!multi.checked || Number(li.dataset.actors) >= 2);
-      li.hidden = !ok;
+    const text = $('q').value.trim().toLowerCase(), dom = $('domain').value,
+          actor = $('actor').value, key = keys[$('sort').value];
+    items.forEach(li => {
+      li.hidden = !((!text || li.dataset.text.includes(text))
+        && (!dom || li.dataset.domain === dom || li.dataset.domain === 'both')
+        && (!actor || li.dataset.ids.includes(' ' + actor + ' '))
+        && (!$('multi').checked || Number(li.dataset.actors) >= 2)
+        && (!$('compared').checked || li.dataset.compared === '1')
+        && (!$('contested').checked || Number(li.dataset.contested) > 0));
     });
+    // Stable sort: ties keep the default order (featured first, then newest).
+    items.slice().sort((a, b) => {
+      const x = key(a), y = key(b);
+      return x < y ? 1 : x > y ? -1 : items.indexOf(a) - items.indexOf(b);
+    }).forEach(li => list.appendChild(li));
   }
-  [q, d, multi].forEach(el => el.addEventListener('input', apply));
+  controls.forEach(el => el.addEventListener('input', apply));
   apply();
 })();
 </script>

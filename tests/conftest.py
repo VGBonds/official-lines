@@ -98,7 +98,8 @@ class FakeLLM:
                               Proposition(id="p2", text="The stop violated maritime law.")],
                 positions=positions,
                 terminology=[TermComparison(concept="the stop", usages=[
-                    TermUsage(actor=a, term="incident") for a in actors])],
+                    TermUsage(actor=a, term="incident" if i else "provocation")
+                    for i, a in enumerate(actors)])],
                 framing=[Framing(actor=a, frame="Emphasises navigation.") for a in actors],
             )
         raise AssertionError(f"unexpected schema {schema}")

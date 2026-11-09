@@ -95,6 +95,12 @@ def test_analysis_and_site(filled, catalog, tmp_path):
     assert "International Monetary Fund" in page
     assert "one of several topics in this statement" in page
     assert "A ship was stopped in the strait on 1 November." in page  # background
+    assert "Shared wording:" in page and "identical passage of 13 words" in page
+    assert "provocation" in page  # terminology with two actors and different words
+    wording_page = (out / "wording.html").read_text()
+    assert "We call on all parties to exercise maximum restraint" in wording_page
+    assert f"event/{slug}.html" in wording_page
+    assert 'data-ids=" ' in (out / "index.html").read_text()
     assert "A ship was stopped in the strait on 1 November." in (out / "index.html").read_text()
     china = (out / "actor" / "CN.html").read_text()
     assert "Strait incident" in china and "Trade talks" in china

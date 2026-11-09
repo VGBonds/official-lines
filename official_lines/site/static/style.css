@@ -88,3 +88,7 @@ th { font-family: system-ui, sans-serif; font-size: .8rem; color: var(--muted); 
 footer { margin-top: 48px; padding-top: 16px; padding-bottom: 32px; border-top: 1px solid var(--line); font-size: .85rem; color: var(--muted); }
 
 .notice { border-left: 3px solid var(--accent); background: var(--accent-soft); padding: .5rem .75rem; }
+.passages { list-style: none; padding: 0; }
+.passages > li { padding: 12px 0; border-bottom: 1px solid var(--line); }
+.passages > li > p { margin: 0 0 4px; max-width: 760px; }
+.passages .statements li { padding: 4px 0; border: 0; }

@@ -65,3 +65,12 @@ def test_agreement_labels_treat_silence_as_silence():
     assert labels["shared_floor"] == ["p1"]
     assert labels["uncontested_majority"] == ["p2", "p5"]  # p3: 2 of 4 is not more than half
     assert labels["contested"] == ["p4"]
+
+
+def test_terminology_needs_two_actors_with_different_words():
+    def term(*usages):
+        return {"concept": "c", "usages": [{"actor": a, "term": t} for a, t in usages]}
+    one_actor = term(("GB", "Russia's aggression"), ("GB", "this war"))
+    same_words = term(("GB", "the war"), ("FR", "The war"))
+    contrast = term(("GB", "the war"), ("RU", "the special military operation"))
+    assert metrics.contrasting_terms([one_actor, same_words, contrast]) == [contrast]

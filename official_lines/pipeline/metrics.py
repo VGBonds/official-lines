@@ -144,6 +144,18 @@ def agreement_labels(table: dict[str, dict[str, str]], proposition_ids: list[str
     }
 
 
+def contrasting_terms(terminology: list[dict]) -> list[dict]:
+    """Concepts that at least two actors name with different words. One actor varying its
+    own wording is style, not a difference between official lines."""
+    kept = []
+    for t in terminology:
+        actors = {u["actor"] for u in t["usages"]}
+        terms = {u["term"].strip().lower() for u in t["usages"]}
+        if len(actors) >= 2 and len(terms) >= 2:
+            kept.append(t)
+    return kept
+
+
 def compute(analysis: dict, texts_by_actor: dict[str, str],
             history: dict[str, list[float]]) -> dict:
     table = stance_table(analysis["positions"])

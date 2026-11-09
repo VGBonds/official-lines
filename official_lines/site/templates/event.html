@@ -50,14 +50,15 @@
   </section>
 
   {% set mt = a.metrics %}
-  {% if mt.polar_pair or mt.unusual_alignment or mt.shared_wording %}
+  {% if mt.polar_pair or mt.unusual_alignment or e.shared_wording %}
   <section>
     <h2>Notable patterns</h2>
     <ul class="notes">
       {% if mt.polar_pair %}<li><strong>Furthest apart:</strong> {{ actors[mt.polar_pair.pair[0]].name }} and {{ actors[mt.polar_pair.pair[1]].name }} (agreement {{ '%.2f' % mt.polar_pair.score }} on a 0–1 scale).</li>{% endif %}
       {% for u in mt.unusual_alignment %}<li><strong>{{ u.kind | capitalize }}:</strong> {{ actors[u.pair[0]].name }} and {{ actors[u.pair[1]].name }} score {{ '%.2f' % u.score }} here, against {{ '%.2f' % u.baseline }} on average over {{ u.events }} earlier events.</li>{% endfor %}
-      {% for w in mt.shared_wording %}<li><strong>Shared wording:</strong> {{ actors[w.pair[0]].name }} and {{ actors[w.pair[1]].name }} use {{ w.shared_phrases }} identical 8-word sequences, e.g. “{{ w.example }}”.</li>{% endfor %}
+      {% for g in e.shared_wording[:5] %}<li><strong>Shared wording:</strong> {{ g.actors | names }} publish {% if g.passages == 1 %}an identical passage of {{ g.longest.words }} words{% else %}{{ g.passages }} identical passages, the longest {{ g.longest.words }} words{% endif %}: “{{ g.longest.excerpt }}”</li>{% endfor %}
     </ul>
+    {% if e.shared_wording %}<p class="muted small">Identical passages can be a joint statement or common talking points. <a href="{{ root }}/wording.html">All shared wording across events</a>.</p>{% endif %}
   </section>
   {% endif %}
 

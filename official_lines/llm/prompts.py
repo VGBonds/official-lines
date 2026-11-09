@@ -100,7 +100,9 @@ Do this:
    'interference' and 'groundless' denies that the verdict is unjust); the quote must make
    that rejection evident. Silence is not a stance: omit it. Do not infer stances from
    what an actor would probably think.
-6. List concepts that actors name differently (terminology), using their exact words.
+6. List concepts that two or more actors name with different words (terminology), using
+   their exact words. One actor varying its own wording is style, not a difference: leave
+   it out.
 7. For each actor, one neutral sentence on what it emphasises or leaves out.
 
 {NEUTRALITY_RULES}"""

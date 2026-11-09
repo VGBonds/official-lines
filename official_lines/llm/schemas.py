@@ -137,6 +137,7 @@ class EventAnalysis(BaseModel):
         description="Only where a source clearly asserts, denies or qualifies. Omit otherwise."
     )
     terminology: list[TermComparison] = Field(
-        description="Concepts that different actors name differently. Empty if none."
+        description="Concepts that two or more actors name with different words. "
+        "Empty if none."
     )
     framing: list[Framing]

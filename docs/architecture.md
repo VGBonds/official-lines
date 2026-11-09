@@ -37,6 +37,7 @@ official_lines/
     events.py         step 2: assign parts to events (or create new ones), merge duplicates
     analyze.py        step 3: propositions × actors stance table, silence
     metrics.py        agreement, shared floor, contested, unusual alignment, shared wording
+    wording.py        identical passages across actors (event pages + Shared wording page)
     brief.py          weekly newsletter draft
   site/
     build.py          generates site/ from the database

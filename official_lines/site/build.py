@@ -8,6 +8,7 @@ import shutil
 import sqlite3
 from collections import Counter, defaultdict
 from datetime import UTC, datetime, timedelta
+from itertools import combinations
 from pathlib import Path
 
 import markdown
@@ -16,13 +17,14 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 from official_lines.catalog import Catalog, on_map
 from official_lines.config import PROJECT_ROOT
 from official_lines.db import loads
-from official_lines.pipeline import metrics
+from official_lines.pipeline import metrics, wording
 from official_lines.pipeline.analyze import late_actors
 from official_lines.pipeline.events import PART_COLUMNS
 
 HERE = Path(__file__).parent
 INDEX_DAYS = 45
 ACTOR_DAYS = 90
+WORDING_SHOWN = 200
 STANCE_SYMBOL = {"asserts": "●", "qualifies": "◐", "denies": "○"}
 
 
@@ -34,6 +36,7 @@ def build_site(conn: sqlite3.Connection, catalog: Catalog, out: Path, site_url: 
                        built_at=datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC"),
                        stance_symbol=STANCE_SYMBOL)
     env.filters["date"] = lambda v: (v or "")[:10]
+    env.filters["names"] = lambda ids: _and([catalog.actor(a).name for a in ids])
 
     if out.exists():
         shutil.rmtree(out)
@@ -42,7 +45,8 @@ def build_site(conn: sqlite3.Connection, catalog: Catalog, out: Path, site_url: 
     (out / "briefs").mkdir()
     shutil.copytree(HERE / "static", out / "static")
 
-    events = load_events(conn, catalog)
+    passages = shared_passages(conn)
+    events = load_events(conn, catalog, passages)
     pages = 0
     for e in events:
         _write(out / "event" / f"{e['slug']}.html",
@@ -53,7 +57,10 @@ def build_site(conn: sqlite3.Connection, catalog: Catalog, out: Path, site_url: 
     recent = [e for e in events if (e["last_seen"] or "") >= since]
     activity = Counter(a for e in recent for a in e["map_iso"])
     _write(out / "index.html", env.get_template("index.html").render(
-        events=recent, activity=dict(activity), root="."))
+        events=recent, activity=dict(activity), root=".",
+        actor_options=sorted(((a, catalog.actor(a).name)
+                              for a in {x for e in recent for x in e["countries"] + e["orgs"]}),
+                             key=lambda o: o[1])))
 
     for actor_id, actor in catalog.actors.items():
         statements = actor_statements(conn, actor_id)
@@ -62,6 +69,8 @@ def build_site(conn: sqlite3.Connection, catalog: Catalog, out: Path, site_url: 
             sources=[s for s in catalog.sources if s.actor == actor_id], root=".."))
         pages += 1
 
+    _write(out / "wording.html", env.get_template("wording.html").render(
+        **wording_page(conn, passages), root="."))
     _write(out / "coverage.html", env.get_template("coverage.html").render(
         rows=coverage(conn, catalog), root="."))
     method = markdown.markdown((PROJECT_ROOT / "docs" / "methodology.md").read_text(),
@@ -76,14 +85,19 @@ def build_site(conn: sqlite3.Connection, catalog: Catalog, out: Path, site_url: 
             title=path.stem, body=html, root=".."))
         briefs.append(path.stem)
     _write(out / "briefs.html", env.get_template("briefs.html").render(briefs=briefs, root="."))
-    return pages + 4 + len(briefs)
+    return pages + 5 + len(briefs)
 
 
 def _write(path: Path, html: str) -> None:
     path.write_text(html, encoding="utf-8")
 
 
-def load_events(conn: sqlite3.Connection, catalog: Catalog) -> list[dict]:
+def load_events(conn: sqlite3.Connection, catalog: Catalog,
+                passages: list[dict] | None = None) -> list[dict]:
+    passages_of: dict[int, list[tuple[dict, dict]]] = defaultdict(list)
+    for p in passages or []:
+        for o in p["occurrences"]:
+            passages_of[o["statement_id"]].append((p, o))
     by_event: dict[int, list[dict]] = defaultdict(list)
     for p in conn.execute(
         f"SELECT {PART_COLUMNS} FROM parts p JOIN statements s ON s.id = p.statement_id"
@@ -94,6 +108,7 @@ def load_events(conn: sqlite3.Connection, catalog: Catalog) -> list[dict]:
             "title": p["title"], "date": p["date"], "summary": p["summary"] or "",
             "claims": (loads(p["data"]) or {}).get("claims", []),
             "of_several": p["n_parts"] > 1,
+            "span": (p["text_start"], p["text_end"]),
         })
 
     events = []
@@ -114,19 +129,35 @@ def load_events(conn: sqlite3.Connection, catalog: Catalog) -> list[dict]:
         e["background"] = (e["analysis"] or {}).get("llm", {}).get("background", "")
         e["late_actors"] = late_actors(conn, row["id"], e["analysis"])
         e["late_names"] = _and([catalog.actor(a).name for a in e["late_actors"]])
+        e["shared_wording"] = event_wording(statements, passages_of)
         if e["analysis"]:
             e["matrix"] = stance_matrix(e["analysis"], actor_ids)
         events.append(e)
     return events
 
 
+def event_wording(statements: list[dict],
+                  passages_of: dict[int, list[tuple[dict, dict]]]) -> list[dict]:
+    """Shared passages that sit inside this event's parts, one line per set of actors."""
+    found: dict[int, tuple[dict, set[str]]] = {}
+    for s in statements:
+        for p, o in passages_of.get(s["id"], []):
+            if wording.in_span(o, *s["span"]):
+                found.setdefault(id(p), (p, set()))[1].add(s["actor"])
+    return wording.group_by_actors(
+        [{**p, "actors": sorted(actors)} for p, actors in found.values() if len(actors) >= 2])
+
+
 def refresh_labels(analysis: dict | None) -> dict | None:
-    """Recompute shared floor / uncontested majority / contested from the stored stance table,
-    so comparisons stored under older definitions follow the current ones."""
+    """Recompute shared floor / uncontested majority / contested from the stored stance table
+    and filter the terminology, so comparisons stored under older definitions follow the
+    current ones."""
     if analysis:
         prop_ids = [p["id"] for p in analysis["llm"]["propositions"]]
         analysis["metrics"].update(
             metrics.agreement_labels(analysis["metrics"]["stance_table"], prop_ids))
+        analysis["llm"]["terminology"] = metrics.contrasting_terms(
+            analysis["llm"].get("terminology", []))
     return analysis
 
 
@@ -175,6 +206,55 @@ def actor_statements(conn: sqlite3.Connection, actor_id: str) -> list[dict]:
         events[r["statement_id"]].append({"slug": r["slug"], "title": r["title"]})
     return [{**dict(r), "summary": (loads(r["extraction"]) or {}).get("summary", ""),
              "events": events.get(r["id"], [])} for r in rows]
+
+
+def shared_passages(conn: sqlite3.Connection) -> list[dict]:
+    """Passages shared across actors, over recent statements and every statement in an event."""
+    since = (datetime.now(UTC) - timedelta(days=ACTOR_DAYS)).isoformat()
+    rows = conn.execute(
+        """SELECT id, actor, text FROM statements
+           WHERE text IS NOT NULL AND relevant = 1
+             AND (COALESCE(published_at, fetched_at) >= ?
+                  OR id IN (SELECT statement_id FROM parts WHERE event_id IS NOT NULL))""",
+        (since,),
+    ).fetchall()
+    return wording.find_passages([dict(r) for r in rows])
+
+
+def wording_page(conn: sqlite3.Connection, passages: list[dict]) -> dict:
+    """Pairs of actors by number of shared passages, and the passages with where they appear."""
+    pairs: dict[tuple[str, str], dict] = {}
+    for p in passages:
+        for x, y in combinations(p["occurrences"], 2):
+            if x["actor"] != y["actor"]:
+                pair = tuple(sorted((x["actor"], y["actor"])))
+                row = pairs.setdefault(pair, {"pair": pair, "statements": set(),
+                                              "passages": set(), "longest": 0})
+                row["statements"].add(frozenset((x["statement_id"], y["statement_id"])))
+                row["passages"].add(id(p))
+                row["longest"] = max(row["longest"], p["words"])
+    for row in pairs.values():
+        row["statements"], row["passages"] = len(row["statements"]), len(row["passages"])
+    meta = {r["id"]: dict(r) for r in conn.execute(
+        "SELECT id, actor, url, title, COALESCE(published_at, fetched_at) AS date"
+        " FROM statements WHERE text IS NOT NULL")}
+    spans: dict[int, list[dict]] = defaultdict(list)
+    for r in conn.execute(
+        """SELECT p.statement_id, p.text_start, p.text_end, e.slug, e.title FROM parts p
+           JOIN events e ON e.id = p.event_id"""
+    ):
+        spans[r["statement_id"]].append(dict(r))
+    shown = passages[:WORDING_SHOWN]  # longest first
+    rows = []
+    for p in shown:
+        occurrences = []
+        for o in p["occurrences"]:
+            events = [{"slug": s["slug"], "title": s["title"]} for s in spans[o["statement_id"]]
+                      if wording.in_span(o, s["text_start"], s["text_end"])]
+            occurrences.append({**meta[o["statement_id"]], "events": events})
+        rows.append({**p, "occurrences": sorted(occurrences, key=lambda o: o["date"] or "")})
+    return {"pairs": sorted(pairs.values(), key=lambda r: (-r["longest"], -r["statements"])),
+            "passages": rows, "total": len(passages), "days": ACTOR_DAYS}
 
 
 def coverage(conn: sqlite3.Connection, catalog: Catalog) -> list[dict]:
