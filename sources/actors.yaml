@@ -20,6 +20,15 @@ countries:
   IN: {name: India, iso_numeric: "356", region: Asia}
   CN: {name: China, iso_numeric: "156", region: Asia}
   JP: {name: Japan, iso_numeric: "392", region: Asia}
+  PK: {name: Pakistan, iso_numeric: "586", region: Asia}
+  VN: {name: Vietnam, iso_numeric: "704", region: Asia}
+  ID: {name: Indonesia, iso_numeric: "360", region: Asia}
+  MY: {name: Malaysia, iso_numeric: "458", region: Asia}
+  PH: {name: Philippines, iso_numeric: "608", region: Asia}
+  CA: {name: Canada, iso_numeric: "124", region: Americas}
+  AR: {name: Argentina, iso_numeric: "032", region: Americas}
+  CL: {name: Chile, iso_numeric: "152", region: Americas}
+  AU: {name: Australia, iso_numeric: "036", region: Oceania}
 
 orgs:
   un: {name: United Nations, scope: global}

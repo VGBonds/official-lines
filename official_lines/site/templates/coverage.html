@@ -9,7 +9,7 @@
   <tbody>
   {% for r in rows | sort(attribute='source.actor') %}
   <tr class="{{ 'off' if not r.source.enabled else ('err' if r.last_error else '') }}">
-    <td><a href="actor/{{ r.source.actor }}.html">{{ actors[r.source.actor].name }}</a></td>
+    <td><a href="actor/{{ actors[r.source.actor].page }}.html">{{ actors[r.source.actor].name }}</a></td>
     <td><a href="{{ r.source.homepage }}" rel="noopener" target="_blank">{{ r.source.name }}</a></td>
     <td>{{ r.source.kind | replace('_', ' ') }}</td>
     <td>{% if not r.source.enabled %}not collected: {{ r.source.status | replace('_', ' ') }}{% elif r.last_error %}error{% else %}ok{% endif %}</td>

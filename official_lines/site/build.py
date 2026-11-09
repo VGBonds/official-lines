@@ -64,7 +64,7 @@ def build_site(conn: sqlite3.Connection, catalog: Catalog, out: Path, site_url: 
 
     for actor_id, actor in catalog.actors.items():
         statements = actor_statements(conn, actor_id)
-        _write(out / "actor" / f"{actor_id}.html", env.get_template("actor.html").render(
+        _write(out / "actor" / f"{actor.page}.html", env.get_template("actor.html").render(
             actor=actor, statements=statements,
             sources=[s for s in catalog.sources if s.actor == actor_id], root=".."))
         pages += 1

@@ -16,8 +16,8 @@ Shared wording: Germany and France use 107 identical 8-word sequences, e.g. “t
 same examples of word sequences.
 Can we have a link to explore these: patterns/wording + counts? 
 
-## Sources ⏳ open
-> Next step: probe script for the new countries, run from the server.
+## Sources ◐ partly resolved
+> `official-lines check` added; server check 2026-11-09. Enabled: Canada (PM, foreign, finance, central bank), Australia (PM, treasurer, central bank), Indonesia (cabinet secretariat), Argentina (foreign ministry, few items), Vietnam government portal (editor decision: official channel). Refuse our server: Philippines, Chile, Pakistan foreign ministry and PM, Malaysia foreign ministry and PM, Australia foreign minister. Not readable: Pakistan finance (PDFs), Indonesia foreign ministry and central bank (JavaScript), Vietnam foreign ministry (Vietnamese only). Open: Bank Negara Malaysia (check again), government.ru.
 
 http://government.ru/en/docs/
 

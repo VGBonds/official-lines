@@ -1,6 +1,6 @@
 {% macro chip(actor_id, root) -%}
 {%- set a = actors[actor_id] -%}
-<a class="chip {{ 'country' if a.is_country else 'org' }}" href="{{ root }}/actor/{{ actor_id }}.html">{{ a.name }}</a>
+<a class="chip {{ 'country' if a.is_country else 'org' }}" href="{{ root }}/actor/{{ a.page }}.html">{{ a.name }}</a>
 {%- endmacro %}
 
 {% macro map(iso_ids, root, id="map") -%}

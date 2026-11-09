@@ -978,3 +978,279 @@ sources:
     enabled: false
     status: not_found
     notes: "probed 2026-11-07: not working; feed returns 200 but is empty (0 items); media/news HTML listing JS-rendered"
+
+  # ================ Candidates added 2026-11-09 (status: candidate, not collected yet).
+  # Check them from the server: `uv run official-lines check`. Notes record what a laptop
+  # saw on 2026-11-09; the server's answer is what counts.
+
+  # ---------------- Canada
+  - id: ca-pm
+    actor: CA
+    kind: head_of_government
+    name: "Prime Minister of Canada"
+    homepage: https://www.pm.gc.ca/en/news
+    method: rss
+    url: "https://www.pm.gc.ca/en/news.rss"
+    enabled: true
+    status: ok
+    notes: "server 2026-11-09: RSS, 10 items, full text"
+  - id: ca-gac
+    actor: CA
+    kind: mfa
+    name: "Global Affairs Canada"
+    homepage: https://www.canada.ca/en/global-affairs/news.html
+    method: rss
+    url: "https://api.io.canada.ca/io-server/gc/news/en/v2?dept=departmentofforeignaffairstradeanddevelopment&sort=publishedDate&orderBy=desc&pick=50&format=atom"
+    enabled: true
+    status: ok
+    notes: "server 2026-11-09: Government of Canada news feed (Atom), 50 items, full text"
+  - id: ca-fin
+    actor: CA
+    kind: finance
+    name: "Department of Finance Canada"
+    homepage: https://www.canada.ca/en/department-finance/news.html
+    method: rss
+    url: "https://api.io.canada.ca/io-server/gc/news/en/v2?dept=departmentfinance&sort=publishedDate&orderBy=desc&pick=50&format=atom"
+    enabled: true
+    status: ok
+    notes: "server 2026-11-09: the news page is JavaScript; the same Government of Canada feed as ca-gac works with dept=departmentfinance"
+  - id: ca-boc
+    actor: CA
+    kind: central_bank
+    name: "Bank of Canada"
+    homepage: https://www.bankofcanada.ca/press/
+    method: rss
+    url: "https://www.bankofcanada.ca/content_type/press-releases/feed/"
+    enabled: true
+    status: ok
+    notes: "server 2026-11-09: RSS, 10 items, full text"
+
+  # ---------------- Australia
+  - id: au-pm
+    actor: AU
+    kind: head_of_government
+    name: "Prime Minister of Australia"
+    homepage: https://www.pm.gov.au/media
+    method: rss
+    url: "https://www.pm.gov.au/rss.xml"
+    enabled: true
+    status: ok
+    notes: "server 2026-11-09: RSS, 50 items incl. press conference transcripts (long)"
+  - id: au-dfat
+    actor: AU
+    kind: mfa
+    name: "Minister for Foreign Affairs (Australia)"
+    homepage: https://www.foreignminister.gov.au/
+    method: html
+    url: "https://www.foreignminister.gov.au/minister/penny-wong/media-releases"
+    enabled: false
+    status: blocked
+    notes: "server 2026-11-09: ReadTimeout, also from a laptop; no workarounds"
+  - id: au-treasury
+    actor: AU
+    kind: finance
+    name: "Treasurer of Australia"
+    homepage: https://ministers.treasury.gov.au/
+    method: rss
+    url: "https://ministers.treasury.gov.au/ministers/jim-chalmers-2022/media-releases/feed"
+    enabled: true
+    status: ok
+    notes: "server 2026-11-09: the media-release page links an RSS feed; switched to it: OK, 10 items, full text (one page with a curly apostrophe in its address answered 404). The URL contains the minister's name: update it when the treasurer changes"
+  - id: au-rba
+    actor: AU
+    kind: central_bank
+    name: "Reserve Bank of Australia"
+    homepage: https://www.rba.gov.au/media-releases/
+    method: rss
+    url: "https://www.rba.gov.au/rss/rss-cb-media-releases.xml"
+    enabled: true
+    status: ok
+    notes: "server 2026-11-09: RSS, few items, full text"
+
+  # ---------------- Pakistan
+  - id: pk-mofa
+    actor: PK
+    kind: mfa
+    name: "Ministry of Foreign Affairs of Pakistan"
+    homepage: https://mofa.gov.pk/
+    method: html
+    url: "https://mofa.gov.pk/press-releases"
+    enabled: false
+    status: blocked
+    notes: "server 2026-11-09: ConnectError; answered a laptop once on 2026-11-09; no workarounds"
+  - id: pk-pmo
+    actor: PK
+    kind: head_of_government
+    name: "Prime Minister's Office of Pakistan"
+    homepage: https://www.pmo.gov.pk/
+    method: html
+    url: "https://www.pmo.gov.pk/"
+    enabled: false
+    status: blocked
+    notes: "server 2026-11-09: ConnectError; no workarounds"
+  - id: pk-finance
+    actor: PK
+    kind: finance
+    name: "Finance Division of Pakistan"
+    homepage: https://www.finance.gov.pk/
+    method: html
+    url: "https://www.finance.gov.pk/press_releases.html"
+    enabled: false
+    status: pdf_only
+    notes: "server 2026-11-09: press releases are PDF files (e.g. /press/pr_08052025.pdf), which we do not read"
+  - id: pk-sbp
+    actor: PK
+    kind: central_bank
+    name: "State Bank of Pakistan"
+    homepage: https://www.sbp.org.pk/
+    method: html
+    url: "https://www.sbp.org.pk/press/index.asp"
+    enabled: false
+    status: not_found
+    notes: "server 2026-11-09: the press page leads to the homepage; no press-release listing found"
+
+  # ---------------- Vietnam
+  - id: vn-mofa
+    actor: VN
+    kind: mfa
+    name: "Ministry of Foreign Affairs of Viet Nam"
+    homepage: https://mofa.gov.vn/
+    method: html
+    url: https://mofa.gov.vn/
+    enabled: false
+    status: no_english
+    notes: "server 2026-11-09: spokesperson statements are only in Vietnamese; the English section has no statement list"
+  - id: vn-gov
+    actor: VN
+    kind: gov_press
+    name: "Viet Nam Government Portal (English)"
+    homepage: https://en.baochinhphu.vn/
+    method: rss
+    url: "https://en.baochinhphu.vn/rss"
+    enabled: true
+    status: ok
+    notes: "server 2026-11-09: OK, RSS 50 items, full text. Editor decision 2026-11-09: counted as an official channel (run by the Government Office, like government.ru), although it styles itself the government's online newspaper"
+
+  # ---------------- Indonesia
+  - id: id-setkab
+    actor: ID
+    kind: gov_press
+    name: "Cabinet Secretariat of Indonesia"
+    homepage: https://setkab.go.id/en/
+    method: rss
+    url: "https://setkab.go.id/en/feed/"
+    enabled: true
+    status: ok
+    notes: "server 2026-11-09: RSS, 10 items, full text"
+  - id: id-kemlu
+    actor: ID
+    kind: mfa
+    name: "Ministry of Foreign Affairs of Indonesia"
+    homepage: https://kemlu.go.id/
+    method: html
+    url: "https://kemlu.go.id/portal/en"
+    enabled: false
+    status: js_only
+    notes: "server 2026-11-09: 1 KB JavaScript shell, no links"
+  - id: id-bi
+    actor: ID
+    kind: central_bank
+    name: "Bank Indonesia"
+    homepage: https://www.bi.go.id/en/
+    method: html
+    url: "https://www.bi.go.id/en/publikasi/ruang-media/news-release/default.aspx"
+    enabled: false
+    status: js_only
+    notes: "server 2026-11-09: the raw HTML lists only 2005-2013 releases; current ones are loaded by JavaScript"
+
+  # ---------------- Malaysia
+  - id: my-kln
+    actor: MY
+    kind: mfa
+    name: "Ministry of Foreign Affairs of Malaysia (Wisma Putra)"
+    homepage: https://www.kln.gov.my/
+    method: html
+    url: "https://www.kln.gov.my/"
+    enabled: false
+    status: blocked
+    notes: "server 2026-11-09: ConnectError; no workarounds"
+  - id: my-pmo
+    actor: MY
+    kind: head_of_government
+    name: "Prime Minister's Office of Malaysia"
+    homepage: https://www.pmo.gov.my/
+    method: html
+    url: "https://www.pmo.gov.my/"
+    enabled: false
+    status: blocked
+    notes: "server 2026-11-09: ConnectError; no workarounds"
+  - id: my-bnm
+    actor: MY
+    kind: central_bank
+    name: "Bank Negara Malaysia"
+    homepage: https://www.bnm.gov.my/
+    method: html
+    url: https://www.bnm.gov.my/press-release-2026
+    link_selector: "a[href]"
+    link_pattern: "bnm\\.gov\\.my/-/[^/?#]+$"
+    enabled: false
+    status: candidate
+    notes: "server 2026-11-09: /press-releases redirected to the 2025 page; using the 2026 page with a pattern, check again. The URL contains the year: update it in January"
+
+  # ---------------- Philippines
+  - id: ph-dfa
+    actor: PH
+    kind: mfa
+    name: "Department of Foreign Affairs of the Philippines"
+    homepage: https://dfa.gov.ph/
+    method: html
+    url: "https://dfa.gov.ph/dfa-news/statements-and-advisoriesupdate"
+    enabled: false
+    status: blocked
+    notes: "server 2026-11-09: HTTP 403; no workarounds"
+  - id: ph-pco
+    actor: PH
+    kind: gov_press
+    name: "Presidential Communications Office of the Philippines"
+    homepage: https://pco.gov.ph/
+    method: rss
+    url: "https://pco.gov.ph/feed/"
+    enabled: false
+    status: blocked
+    notes: "server 2026-11-09: HTTP 403; no workarounds"
+
+  # ---------------- Argentina
+  - id: ar-mfa
+    actor: AR
+    kind: mfa
+    name: "Ministry of Foreign Affairs of Argentina"
+    homepage: https://www.cancilleria.gob.ar/en
+    method: html
+    url: "https://www.cancilleria.gob.ar/en"
+    link_selector: "a[href]"
+    link_pattern: "/en/announcements/news/[^/?#]+$"
+    enabled: true
+    status: ok
+    notes: "server 2026-11-09: the English homepage shows a few featured news items (newest checked: June 2026), not a full list; expect few statements"
+
+  # ---------------- Chile
+  - id: cl-gov
+    actor: CL
+    kind: gov_press
+    name: "Government of Chile"
+    homepage: https://www.gob.cl/en/
+    method: html
+    url: "https://www.gob.cl/en/news/"
+    enabled: false
+    status: blocked
+    notes: "server 2026-11-09: HTTP 403; no workarounds"
+  - id: cl-minrel
+    actor: CL
+    kind: mfa
+    name: "Ministry of Foreign Affairs of Chile"
+    homepage: https://www.minrel.gob.cl/
+    method: html
+    url: "https://www.minrel.gob.cl/"
+    enabled: false
+    status: blocked
+    notes: "server 2026-11-09: HTTP 403; no workarounds"

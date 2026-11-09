@@ -17,6 +17,11 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="command", required=True)
 
     sub.add_parser("sources", help="list the catalog and each source's last result")
+    p = sub.add_parser("check", help="test sources without storing anything (default: the"
+                       " candidates in sources.yaml)")
+    p.add_argument("--source", help="only this source id")
+    p.add_argument("--status", default="candidate", help="sources with this status ('all': every"
+                   " source)")
     p = sub.add_parser("collect", help="fetch new statements from all enabled sources")
     p.add_argument("--source", help="only this source id")
     p = sub.add_parser("extract", help="LLM step 1: read new statements")
@@ -66,6 +71,27 @@ def cmd_sources(args, settings, catalog, conn):
     covered = len({s.actor for s in catalog.enabled_sources()})
     print(f"\n{on} enabled, {len(catalog.sources) - on} disabled, "
           f"{covered} of {len(catalog.actors)} actors covered")
+
+
+def cmd_check(args, settings, catalog, conn):
+    from official_lines.collect.check import check_source, format_result
+    from official_lines.collect.http import PoliteClient
+    chosen = [s for s in catalog.sources
+              if (s.id == args.source if args.source else args.status in ("all", s.status))]
+    if not chosen:
+        print("no matching sources")
+        return 1
+    client = PoliteClient(settings.user_agent)
+    verdicts = {}
+    try:
+        for s in chosen:
+            print(f"checking {s.id} ({s.url}) ...", flush=True)
+            r = check_source(s, client)
+            verdicts[r.verdict] = verdicts.get(r.verdict, 0) + 1
+            print(format_result(r), "\n", flush=True)
+    finally:
+        client.close()
+    print("summary: " + ", ".join(f"{n} {v}" for v, n in sorted(verdicts.items())))
 
 
 def cmd_collect(args, settings, catalog, conn):
@@ -164,7 +190,7 @@ def cmd_serve(args, settings, catalog, conn):
 
 
 COMMANDS = {
-    "sources": cmd_sources, "collect": cmd_collect, "extract": cmd_extract,
+    "sources": cmd_sources, "check": cmd_check, "collect": cmd_collect, "extract": cmd_extract,
     "group": cmd_group, "analyze": cmd_analyze, "build": cmd_build, "run": cmd_run,
     "brief": cmd_brief, "feature": cmd_feature,
     "unfeature": functools.partial(cmd_feature, value=0),

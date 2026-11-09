@@ -12,6 +12,8 @@ Only **official, first-hand speech**:
 
 We do **not** read news agencies (state-owned or not), broadcasters, newspapers, think tanks or social media. An organisation never colours the country hosting its headquarters.
 
+One judgement call: a portal run by a government's own office that publishes that government's announcements counts as a government press office, even when it calls itself a newspaper. Today this applies to the Viet Nam Government Portal (run by the Government Office). The Coverage page names every source we read.
+
 We read **English** versions only. Some governments say less, or say it differently, in English than in their own language. The [Coverage](coverage.html) page lists every source we read and every one we could not read (blocked, no English version, no machine-readable page). An actor that looks silent may simply be one we cannot read: check Coverage before drawing conclusions.
 
 ## How a statement becomes a comparison

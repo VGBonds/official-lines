@@ -72,3 +72,25 @@ def test_retries_stop_after_retry_window(conn, catalog):
     assert pages_to_retry(conn)["gb-fcdo"][0]["url"] == STRAIT
     conn.execute("UPDATE statements SET page_missing_since='2026-01-01T00:00:00+00:00'")
     assert pages_to_retry(conn) == {}
+
+
+def test_check_reports_ok_blocked_and_link_suggestions(catalog):
+    from dataclasses import replace
+
+    from official_lines.collect.check import check_source
+
+    source = next(s for s in catalog.sources if s.id == "gb-fcdo")
+    assert check_source(source, FakeClient(down=set())).verdict == "ok"
+    assert check_source(source, FakeClient(down={FEED})).verdict == "blocked"
+
+    listing = replace(source, method="html", url="https://example.gov/news",
+                      link_selector=None, link_pattern=None)
+
+    class ListingClient(FakeClient):
+        def get(self, url):
+            if url == listing.url:
+                return Page(url, b'<a href="/about">About</a><a href="/news/2026/strait">S</a>')
+            return super().get(url)
+
+    r = check_source(listing, ListingClient(down=set()))
+    assert r.verdict == "needs_pattern" and r.suggestions == ["https://example.gov/news/2026/strait"]

@@ -21,7 +21,7 @@ sources:
     link_selector: "ul.list1 a"          # html only: which links on the page are statements
     link_pattern: "/eng/xw/.*\\.html$"   # optional: the link address must match this
     enabled: true             # false: listed on the Coverage page, but not read
-    status: ok                # ok | blocked | js_only | no_english | not_found
+    status: ok                # ok | candidate | blocked | js_only | pdf_only | no_english | not_found
     notes: "what we tried and when"
 ```
 
@@ -53,6 +53,30 @@ If you see `<rss` or `<feed` and items with `<title>` and `<link>`, add it with 
    ```
 
 Some sites build their pages with JavaScript, so the links aren't in the raw HTML. Official Lines can't read those; mark them `enabled: false, status: js_only`. Same for sites that block bots (`status: blocked`). **We do not get around blocks or CAPTCHAs.** Look for another official route instead: an embassy site, a different section of the same site, or a government press office.
+
+## Checking candidates
+
+A new source starts as `enabled: false, status: candidate`. The `check` command tests it the way a real collection pass would (robots.txt, the same client, the same parsers) but stores nothing:
+
+```bash
+uv run official-lines check                     # every source with status: candidate
+uv run official-lines check --source ca-gac     # one source
+uv run official-lines check --status all        # every source in the catalog
+```
+
+**Run it on the server**, not only on your laptop: several sites answer a home connection but refuse data-centre addresses, and the server is where collection happens. Each source gets a verdict:
+
+| Verdict | Meaning | What to do |
+|---|---|---|
+| `OK` | Links found and statement pages have real text | Set `enabled: true, status: ok` |
+| `NEEDS_PATTERN` | The page answers, but we don't yet know which links are statements | Pick a `link_pattern` from the `link:` suggestions it prints, add `link_selector: "a[href]"`, check again |
+| `THIN_TEXT` | Links found, but the pages give little text | Usually JavaScript pages; `status: js_only` |
+| `NO_LINKS` | The page has no usable links | JavaScript page (`js_only`) or wrong address |
+| `BLOCKED` | 403, timeout or refused | `status: blocked`; no workarounds |
+| `ROBOTS` | robots.txt asks bots to stay away | `status: blocked`; we respect it |
+| `NOT_FOUND` | 404 | Find the new address |
+
+Also read the sample titles it prints. A feed can work technically and still carry the wrong thing (Argentina's English "RSS" lists trade statistics).
 
 ## Coverage gaps are part of the product
 

@@ -26,6 +26,13 @@ class Actor:
     iso_numeric: str | None = None
     region: str | None = None
 
+    @property
+    def page(self) -> str:
+        """File name of the actor page. Organisations get a prefix so that a country and an
+        organisation whose ids differ only in case (AU Australia, au African Union) never
+        share a file on case-insensitive disks (macOS)."""
+        return self.id if self.is_country else f"org-{self.id}"
+
 
 @dataclass(frozen=True)
 class Source:
