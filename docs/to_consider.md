@@ -17,7 +17,13 @@ Can we have a link to explore these: patterns + counts?
 ## Sources
 http://government.ru/en/docs/
 
-Add Turkey, Pakistan, South-East Asia (India is blocked), Canada, Australia, Norway
+Add 
+- Turkey: regional power + military 
+- Pakistan : nuclear power 
+- South East Asia (India is blocked) is underrepresented: add Vietnam/Indonesia/Malaysia/the Philippines
+- Canada: G7, large economy, rich in natural resources
+- Australia: Oceania is underrepresented
+- Argentina/Chile: add at least one more LatAm country
 
 ## use cases
 
