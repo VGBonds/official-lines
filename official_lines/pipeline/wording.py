@@ -7,6 +7,7 @@ within one actor's own statements are not counted.
 
 import re
 from collections import defaultdict
+from itertools import combinations
 
 from official_lines.pipeline.metrics import SHINGLE_WORDS
 
@@ -118,3 +119,38 @@ def group_by_actors(passages: list[dict]) -> list[dict]:
         if p["words"] > g["longest"]["words"]:
             g["longest"] = p
     return sorted(groups.values(), key=lambda g: (-len(g["actors"]), -g["longest"]["words"]))
+
+
+JOINT_MIN_WORDS = 60   # a shared text shorter than this is a quote, not a joint text
+JOINT_MIN_SHARE = 0.6  # share of the shorter text's word sequences the other must contain
+# 0.6, not higher: one publisher's copy of a joint text differs from another's by spelling
+# (honour/honor), an intro line, and page furniture the text extractor leaves in.
+
+
+def same_text_groups(texts: dict) -> list[set]:
+    """Keys whose texts are the same text: a joint statement published by several actors, or
+    a verbatim republication. Two texts belong together when the shorter one has at least
+    JOINT_MIN_WORDS words and at least JOINT_MIN_SHARE of its SHINGLE_WORDS-word sequences
+    occur in the other. Membership is transitive. Only groups of two or more are returned."""
+    shingles = {}
+    for key, text in texts.items():
+        ws = [w.group().lower() for w in _words(text)]
+        if len(ws) >= JOINT_MIN_WORDS:
+            shingles[key] = {" ".join(ws[i:i + SHINGLE_WORDS])
+                             for i in range(len(ws) - SHINGLE_WORDS + 1)}
+    parent = {k: k for k in shingles}
+
+    def find(k):
+        while parent[k] != k:
+            parent[k] = parent[parent[k]]
+            k = parent[k]
+        return k
+
+    for a, b in combinations(shingles, 2):
+        small, big = sorted((shingles[a], shingles[b]), key=len)
+        if len(small & big) >= JOINT_MIN_SHARE * len(small):
+            parent[find(a)] = find(b)
+    groups: dict = defaultdict(set)
+    for k in shingles:
+        groups[find(k)].add(k)
+    return [g for g in groups.values() if len(g) > 1]

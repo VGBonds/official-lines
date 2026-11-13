@@ -36,7 +36,7 @@
     <p class="muted small">● asserts &nbsp; ◐ qualifies &nbsp; ○ denies &nbsp; blank: no stance in the statements we have. Hover or tap a symbol for the quote. <strong>Shared floor:</strong> every actor in the table asserts it. <strong>Uncontested majority:</strong> more than half assert it, nobody denies it, the rest are silent or qualify. <strong>Contested:</strong> one asserts, another denies. <a href="{{ root }}/method.html">Definitions</a>.</p>
     <div class="table-wrap">
     <table class="matrix">
-      <thead><tr><th>Proposition</th>{% for c in e.matrix.columns %}<th>{{ actors[c].name }}</th>{% endfor %}</tr></thead>
+      <thead><tr><th>Proposition</th>{% for c in e.matrix.columns %}<th>{{ e.voice_names.get(c, c) }}</th>{% endfor %}</tr></thead>
       <tbody>
       {% for r in e.matrix.rows %}
         <tr class="{{ 'floor' if r.floor else '' }} {{ 'majority' if r.majority else '' }} {{ 'contested' if r.contested else '' }}">
@@ -47,6 +47,7 @@
       </tbody>
     </table>
     </div>
+    {% for v in (a.voices or {}).values() %}<p class="muted small">{{ v.members | names }} published the same text. It is one column: one text is one voice, however many publish it. Agreement between its publishers is not measured; it is listed under shared wording.</p>{% endfor %}
   </section>
 
   {% set mt = a.metrics %}
@@ -67,7 +68,7 @@
     <h2>Same thing, different words</h2>
     <table class="terms">
       {% for t in a.llm.terminology %}
-      <tr><th>{{ t.concept }}</th><td>{% for u in t.usages %}<span class="term"><span class="muted">{{ actors[u.actor].name if u.actor in actors else u.actor }}:</span> “{{ u.term }}”</span>{% endfor %}</td></tr>
+      <tr><th>{{ t.concept }}</th><td>{% for u in t.usages %}<span class="term"><span class="muted">{{ e.voice_names.get(u.actor, u.actor) }}:</span> “{{ u.term }}”</span>{% endfor %}</td></tr>
       {% endfor %}
     </table>
   </section>
@@ -76,7 +77,7 @@
   {% if a.llm.framing %}
   <section>
     <h2>Emphasis</h2>
-    <ul class="notes">{% for f in a.llm.framing %}<li><strong>{{ actors[f.actor].name if f.actor in actors else f.actor }}:</strong> {{ f.frame }}</li>{% endfor %}</ul>
+    <ul class="notes">{% for f in a.llm.framing %}<li><strong>{{ e.voice_names.get(f.actor, f.actor) }}:</strong> {{ f.frame }}</li>{% endfor %}</ul>
   </section>
   {% endif %}
   {% else %}

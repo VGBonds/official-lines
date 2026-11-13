@@ -217,3 +217,44 @@ def test_new_actor_triggers_update(filled, catalog, tmp_path):
 
     build_site(filled, catalog, out, "https://p.example", tmp_path / "briefs")
     assert "arrived later" not in (out / "event" / f"{strait['slug']}.html").read_text()
+
+
+JOINT_TEXT = ("We, the foreign ministers, are concerned by the stopping of a ship in the strait "
+              "and call on all parties to exercise restraint. " * 6)
+
+
+def test_joint_text_is_one_voice(conn, catalog, tmp_path):
+    """The UK and the US publish the same text; China answers. The table has two columns,
+    the joint text counts once, and the UK-US pair is not a measured agreement."""
+    sync_sources(conn, catalog)
+    rows = [("gb-fcdo", "GB", "mfa", "Joint statement on the strait", JOINT_TEXT),
+            ("us-fed", "US", "central_bank", "Joint statement on the strait",
+             "Washington. " + JOINT_TEXT),
+            ("cn-mfa", "CN", "mfa", "Remarks on the strait", RESTRAINT)]
+    for i, (src, actor, kind, title, text) in enumerate(rows):
+        conn.execute(
+            "INSERT INTO statements (source_id, actor, kind, url, title, published_at,"
+            " fetched_at, text) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (src, actor, kind, f"https://j/{i}", title, now_iso(), now_iso(), text))
+    conn.commit()
+    llm = FakeLLM()
+    extract_pending(conn, catalog, llm, "m", limit=100)
+    group_pending(conn, catalog, llm, "m")
+    assert analyze_due(conn, catalog, llm, "m", max_per_day=5) == 1
+    row = conn.execute("SELECT slug, analysis FROM events WHERE analysis IS NOT NULL").fetchone()
+    a = json.loads(row["analysis"])
+    assert list(a["voices"]) == ["joint:GB+US"]
+    assert a["voices"]["joint:GB+US"]["members"] == ["GB", "US"]
+    assert a["actors"] == ["CN", "GB", "US"]
+    assert set(a["metrics"]["stance_table"]) == {"CN", "joint:GB+US"}
+    assert a["metrics"]["pairs"]["GB|US"]["joint"] is True
+    assert "joint" not in a["metrics"]["pairs"]["CN|GB"]
+    assert a["metrics"]["contested"] == ["p2"]
+
+    out = tmp_path / "site"
+    build_site(conn, catalog, out, "https://p.example", tmp_path / "briefs")
+    page = (out / "event" / f"{row['slug']}.html").read_text()
+    assert "<th>United Kingdom and United States (joint text)</th>" in page
+    matrix = page[page.index('<table class="matrix">'):page.index("</table>")]
+    assert matrix.count("<th>") == 3  # proposition + two voices
+    assert "published the same text" in page

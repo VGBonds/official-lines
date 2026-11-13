@@ -81,9 +81,9 @@ class FakeLLM:
                             for issue, k in keys.items()],
             )
         if schema is EventAnalysis:
-            actors = sorted(set(re.findall(r"actor=(\w+)", user)))
-            ids = {a: int(re.search(rf"statement_id=(\d+) actor={a}\b", user).group(1))
-                   for a in actors}
+            actors = sorted(set(re.findall(r"actor=(\S+)", user)))
+            ids = {a: int(re.search(rf"statement_id=(\d+) actor={re.escape(a)}(\s|$)",
+                                    user).group(1)) for a in actors}
             positions = [Position(actor=a, proposition_id="p1", stance="asserts",
                                   quote="a ship was stopped", statement_id=ids[a])
                          for a in actors]

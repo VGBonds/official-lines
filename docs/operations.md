@@ -61,7 +61,11 @@ The AI will sometimes group badly or misstate a stance. In v1 the fixes are manu
 
 - **Re-run a comparison** after more statements arrived: `uv run official-lines analyze --event SLUG`.
 - **Two events that should be one, or a statement in the wrong event:** for now, fix it in the database with `sqlite3 data/official-lines.db` (e.g. `UPDATE parts SET event_id=12 WHERE statement_id=345;`; a press briefing has several parts, see `SELECT id, idx, issue FROM parts WHERE statement_id=345;`), then re-analyse. A small editor command for this is on the [roadmap](roadmap.md).
-- **A systematic mistake** (the same kind of error again and again): the prompts in `official_lines/llm/prompts.py` are the place to fix it. Prompts are published methodology, so note changes in the Method page.
+- **A systematic mistake** (the same kind of error again and again): the prompts in `official_lines/llm/prompts.py` are the place to fix it. Prompts are published methodology, so note changes in the Method page. After any prompt change, run the golden set, so that the fix does not quietly break comparisons that were right before:
+  ```bash
+  uv run official-lines golden
+  ```
+  It re-compares a handful of hand-judged events (about $0.03 each) and prints PASS or FAIL per case with the stance table. When you meet a comparison that is clearly right or clearly wrong in an instructive way, keep it: `uv run official-lines golden --export SLUG`, then write what must hold into the file's `expect` block.
 
 ## Troubleshooting
 

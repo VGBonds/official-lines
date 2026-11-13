@@ -74,3 +74,25 @@ def test_terminology_needs_two_actors_with_different_words():
     same_words = term(("GB", "the war"), ("FR", "The war"))
     contrast = term(("GB", "the war"), ("RU", "the special military operation"))
     assert metrics.contrasting_terms([one_actor, same_words, contrast]) == [contrast]
+
+
+def test_joint_voice_is_one_column_and_its_publishers_are_not_measured():
+    voices = {"joint:FR+GB": ["FR", "GB"]}
+    analysis = {
+        "propositions": [{"id": "p1", "text": "x"}, {"id": "p2", "text": "y"}],
+        "positions": [pos("joint:FR+GB", "p1", "asserts"), pos("joint:FR+GB", "p2", "asserts"),
+                      pos("CN", "p1", "asserts"), pos("CN", "p2", "denies"),
+                      pos("GB", "p2", "qualifies")],  # the UK also spoke on its own
+    }
+    m = metrics.compute(analysis, {}, {}, voices=voices)
+    # Labels count voices: two voices, one text each side.
+    assert m["shared_floor"] == ["p1"] and m["contested"] == ["p2"]
+    # Pairs are per actor: FR inherits the joint stances; GB combines them cautiously.
+    assert m["pairs"]["CN|FR"] == {"score": 0.5, "shared": 2}
+    assert m["pairs"]["CN|GB"] == {"score": 0.75, "shared": 2}
+    assert m["pairs"]["FR|GB"]["joint"] is True
+    assert metrics.polar_pair({"FR|GB": {"score": 0.0, "shared": 3, "joint": True}}) is None
+    assert metrics.unusual_alignment({"FR|GB": {"score": 1.0, "shared": 3, "joint": True}},
+                                     {"FR|GB": [0.0, 0.0, 0.0]}) == []
+    assert metrics.one_sided_denials(metrics.stance_table([pos("CN", "p3", "denies")]),
+                                     ["p3"]) == ["p3"]

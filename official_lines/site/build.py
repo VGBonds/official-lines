@@ -126,6 +126,7 @@ def load_events(conn: sqlite3.Connection, catalog: Catalog,
         e["map_iso"] = sorted({catalog.actor(s["actor"]).iso_numeric for s in statements
                                if on_map(catalog.actor(s["actor"]), s["kind"])})
         e["analysis"] = refresh_labels(loads(row["analysis"]))
+        e["voice_names"] = voice_names(catalog, e["analysis"])
         e["background"] = (e["analysis"] or {}).get("llm", {}).get("background", "")
         e["late_actors"] = late_actors(conn, row["id"], e["analysis"])
         e["late_names"] = _and([catalog.actor(a).name for a in e["late_actors"]])
@@ -165,14 +166,36 @@ def _and(names: list[str]) -> str:
     return " and ".join(names) if len(names) < 3 else ", ".join(names[:-1]) + " and " + names[-1]
 
 
+def voice_names(catalog: Catalog, analysis: dict | None) -> dict[str, str]:
+    """Display names for every column the stance table can have: actors and joint voices."""
+    names = {a: actor.name for a, actor in catalog.actors.items()}
+    for vid, v in ((analysis or {}).get("voices") or {}).items():
+        names[vid] = _and([catalog.actor(a).name for a in v["members"]]) + " (joint text)"
+    return names
+
+
 def stance_matrix(analysis: dict, actor_ids: list[str]) -> dict:
-    """Rows = propositions, columns = actors that took any stance; cells = stance + quote."""
+    """Rows = propositions, columns = voices that took any stance (an actor, or one joint
+    text published by several actors); cells = stance + quote."""
+    table = analysis["metrics"]["stance_table"]
+    voices = analysis.get("voices") or {}
+    known = set(actor_ids) | set(voices)
     cells: dict[tuple[str, str], dict] = {}
     for p in analysis["llm"]["positions"]:
-        if p["actor"] in actor_ids:
+        if p["actor"] in known:
             cells.setdefault((p["proposition_id"], p["actor"]), p)
-    table = analysis["metrics"]["stance_table"]
-    columns = [a for a in actor_ids if table.get(a)]
+    for vid, v in voices.items():  # a publisher's own column inherits the joint text's quotes
+        for a in v["members"]:
+            for (pid, who), p in list(cells.items()):
+                if who == vid:
+                    cells.setdefault((pid, a), p)
+
+    def first_member(v: str) -> int:  # columns follow the order actors first spoke in
+        members = voices[v]["members"] if v in voices else [v]
+        return min((actor_ids.index(a) for a in members if a in actor_ids),
+                   default=len(actor_ids))
+
+    columns = sorted((v for v in table if table[v] and v in known), key=first_member)
     rows = []
     for prop in analysis["llm"]["propositions"]:
         rows.append({

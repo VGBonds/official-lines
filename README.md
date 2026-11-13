@@ -55,6 +55,7 @@ New to all of this? Start with **[docs/getting-started.md](docs/getting-started.
 | `uv run official-lines run` | All of the above, in order (this is what the server runs every 3 hours) |
 | `uv run official-lines brief` | Draft the weekly newsletter into `data/briefs/` |
 | `uv run official-lines feature SLUG` | Mark an event as an editor's pick (`unfeature` to undo) |
+| `uv run official-lines golden` | Re-run the hand-judged comparisons in `tests/golden` and check them (after changing prompts or metrics); `--export SLUG` adds a case |
 | `uv run official-lines costs` | AI spend this month, by step |
 | `uv run official-lines serve` | Preview the site locally |
 

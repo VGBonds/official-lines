@@ -37,6 +37,10 @@ def main(argv: list[str] | None = None) -> int:
     for name in ("feature", "unfeature"):
         p = sub.add_parser(name, help=f"{name} an event (editor's pick)")
         p.add_argument("slug")
+    p = sub.add_parser("golden", help="re-run the hand-judged comparisons in tests/golden and"
+                       " check them (after changing prompts or metrics)")
+    p.add_argument("--export", metavar="SLUG", help="write a new case from this event")
+    p.add_argument("--case", help="run only the case with this file stem")
     sub.add_parser("costs", help="LLM spend this month and per step")
     p = sub.add_parser("serve", help="preview the generated site at http://localhost:8000")
     p.add_argument("--port", type=int, default=8000)
@@ -169,6 +173,22 @@ def cmd_feature(args, settings, catalog, conn, value=1):
     print(f"{'featured' if value else 'unfeatured'} {args.slug}")
 
 
+def cmd_golden(args, settings, catalog, conn):
+    from official_lines.pipeline.golden import GOLDEN_DIR, export_case, run_cases
+    if args.export:
+        path = export_case(conn, args.export)
+        print(f"wrote {path}\nFill in its \"expect\" block (see official_lines/pipeline/golden.py"
+              f" for the keys), then run `uv run official-lines golden`.")
+        return
+    paths = sorted(GOLDEN_DIR.glob(f"{args.case or '*'}.json"))
+    if not paths:
+        print("no golden cases found; add one with --export SLUG")
+        return 1
+    failed = run_cases(catalog, _llm(settings, conn), settings.analyze_model, paths)
+    print(f"{len(paths) - failed} of {len(paths)} cases pass")
+    return 1 if failed else 0
+
+
 def cmd_costs(args, settings, catalog, conn):
     from official_lines.llm.client import month_spend
     month = now_iso()[:7]
@@ -194,7 +214,7 @@ COMMANDS = {
     "group": cmd_group, "analyze": cmd_analyze, "build": cmd_build, "run": cmd_run,
     "brief": cmd_brief, "feature": cmd_feature,
     "unfeature": functools.partial(cmd_feature, value=0),
-    "costs": cmd_costs, "serve": cmd_serve,
+    "golden": cmd_golden, "costs": cmd_costs, "serve": cmd_serve,
 }
 
 if __name__ == "__main__":

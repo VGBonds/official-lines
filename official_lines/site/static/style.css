@@ -73,7 +73,7 @@ table { border-collapse: collapse; width: 100%; background: var(--surface); }
 th, td { border-bottom: 1px solid var(--line); padding: 8px; text-align: left; vertical-align: top; }
 th { font-family: system-ui, sans-serif; font-size: .8rem; color: var(--muted); font-weight: 600; }
 .matrix td.cell { text-align: center; font-size: 1.2rem; width: 1%; white-space: nowrap; }
-.matrix th:not(:first-child) { text-align: center; min-width: 72px; }
+.matrix th:not(:first-child) { text-align: center; min-width: 9em; }
 .matrix tr.floor td:first-child { background: var(--floor); }
 .matrix tr.majority td:first-child { background: var(--majority); }
 .matrix tr.contested td:first-child { background: var(--contested); }

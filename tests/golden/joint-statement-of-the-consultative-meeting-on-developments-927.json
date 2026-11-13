@@ -1,0 +1,174 @@
+{
+ "why": "The OIC and the African Union published the same joint statement. One joint voice, nothing to contest, no agreement measured between the two publishers. Judged 2026-11-13.",
+ "title": "Joint statement of the Consultative Meeting on developments relating to the Palestinian cause, November 2026",
+ "actors": [
+  "au",
+  "oic"
+ ],
+ "expect": {
+  "joint": [
+   [
+    "au",
+    "oic"
+   ]
+  ],
+  "contested_max": 0,
+  "no_one_sided_denials": true
+ },
+ "parts": [
+  {
+   "statement_id": 571,
+   "idx": 2,
+   "actor": "oic",
+   "kind": "org",
+   "date": "2026-11-04",
+   "title": "JOINT STATEMENT ISSUED BY THE CONSULTATIVE MEETING ON THE DEVELOPMENTS RELATING TO THE PALESTINIAN CAUSE 2026-11-05",
+   "issue": "Diplomatic missions in Jerusalem",
+   "claims": [
+    {
+     "text": "Moves of diplomatic missions to Jerusalem are unlawful and violate UN Security Council resolutions; states should rescind them.",
+     "quote": "to rescind these unlawful decisions that violates the relevant UN Security Council Resolutions",
+     "type": "demand"
+    }
+   ],
+   "key_terms": [
+    {
+     "term": "alleged sovereignty",
+     "refers_to": "Israeli claims of sovereignty over Jerusalem, as characterised by the statement"
+    }
+   ],
+   "of_several": true,
+   "passage": "Call on States that have moved or announced their intention to move their diplomatic missions to Occupied Jerusalem, to rescind these unlawful decisions that violates the relevant UN Security Council Resolutions, and refrain from taking any stance, decision or action capable of consolidating the Israeli occupation or recognizing illegal annexation measure and attempts to impose alleged sovereignty over the city. They call on these States to comply with their responsibilities under international law.\n5. "
+  },
+  {
+   "statement_id": 571,
+   "idx": 1,
+   "actor": "oic",
+   "kind": "org",
+   "date": "2026-11-04",
+   "title": "JOINT STATEMENT ISSUED BY THE CONSULTATIVE MEETING ON THE DEVELOPMENTS RELATING TO THE PALESTINIAN CAUSE 2026-11-05",
+   "issue": "Gaza Peace Agreement second phase and forced displacement",
+   "claims": [
+    {
+     "text": "Calls for implementing the second phase of the Gaza Peace Agreement, including permanent ceasefire and opening of all crossings.",
+     "quote": "Urge the implementation of the second phase of the Gaza Peace Agreement, leading to permanent ceasefire",
+     "type": "demand"
+    },
+    {
+     "text": "Israeli attempts or plans to forcibly displace Palestinians are considered a war crime and a grave threat to peace and security.",
+     "quote": "considering such acts a war crime, a flagrant violation of international humanitarian law and a grave threat to regional and international peace and security",
+     "type": "accusation"
+    }
+   ],
+   "key_terms": [],
+   "of_several": true,
+   "passage": "Urge the implementation of the second phase of the Gaza Peace Agreement, leading to permanent ceasefire, ending the Israeli siege and occupation, the opening of all crossing points to facilitate safe and unhindered flow of humanitarian assistance, commencing the reconstruction of Gaza, while ensuring territorial contiguity and integrity, and reject any Israeli attempts or plans to forcibly displace the Palestinian people, whether from the Gaza Strip or the West Bank, considering such acts a war crime, a flagrant violation of international humanitarian law and a grave threat to regional and international peace and security.\n4. "
+  },
+  {
+   "statement_id": 571,
+   "idx": 0,
+   "actor": "oic",
+   "kind": "org",
+   "date": "2026-11-04",
+   "title": "JOINT STATEMENT ISSUED BY THE CONSULTATIVE MEETING ON THE DEVELOPMENTS RELATING TO THE PALESTINIAN CAUSE 2026-11-05",
+   "issue": "Two-state solution and Palestinian statehood",
+   "claims": [
+    {
+     "text": "Lasting peace can only be achieved through a two-state solution based on ending Israeli occupation and withdrawal.",
+     "quote": "peace in the region can only be achieved through the implementation of the two-state solution based on ending the Israeli colonial occupation and on immediate and unconditional withdrawal",
+     "type": "position"
+    },
+    {
+     "text": "Palestine should be an independent sovereign state on the 4 June 1967 lines with East Jerusalem as its capital.",
+     "quote": "realize the independent and sovereign State of Palestine on the lines of 4 June 1967, with East Jerusalem as its capital",
+     "type": "demand"
+    }
+   ],
+   "key_terms": [
+    {
+     "term": "Israeli colonial occupation",
+     "refers_to": "Israeli occupation of Palestinian territory, as characterised by the statement"
+    }
+   ],
+   "of_several": true,
+   "passage": "Affirm that just, lasting and comprehensive peace in the region can only be achieved through the implementation of the two-state solution based on ending the Israeli colonial occupation and on immediate and unconditional withdrawal, in order to realize the independent and sovereign State of Palestine on the lines of 4 June 1967, with East Jerusalem as its capital, in accordance with the principles of international law, the relevant United Nations resolutions and the Arab Peace Initiative.\n2. Renew their commitments to advocate for taking practical steps to implement the two-state solution, continue working to implement the relevant resolutions of the United Nations and international organizations, and the New York Declaration (2025), and stress the need for Member States to take adequate measures in order to achieve the inalienable rights of the Palestinian people to independence, return, self-determination and statehood.\n3. "
+  },
+  {
+   "statement_id": 546,
+   "idx": 2,
+   "actor": "au",
+   "kind": "org",
+   "date": "2026-11-06",
+   "title": "Joint Statement on the Developments Relating to the Palestinian Cause",
+   "issue": "Diplomatic missions in Jerusalem",
+   "claims": [
+    {
+     "text": "Calls on states that moved or plan to move diplomatic missions to Jerusalem to rescind these decisions, which the statement calls unlawful.",
+     "quote": "Call on States that have moved or announced their intention to move their diplomatic missions to Occupied Jerusalem, to rescind these unlawful decisions",
+     "type": "demand"
+    }
+   ],
+   "key_terms": [
+    {
+     "term": "alleged sovereignty",
+     "refers_to": "Israeli claims of sovereignty over Jerusalem, as characterised by the statement"
+    }
+   ],
+   "of_several": true,
+   "passage": "Call on States that have moved or announced their intention to move their diplomatic missions to Occupied Jerusalem, to rescind these unlawful decisions that violates the relevant UN Security Council Resolutions, and refrain from taking any stance, decision or action capable of consolidating the Israeli occupation or recognizing illegal annexation measure and attempts to impose alleged sovereignty over the city. They call on these States to comply with their responsibilities under international law.\n- "
+  },
+  {
+   "statement_id": 546,
+   "idx": 1,
+   "actor": "au",
+   "kind": "org",
+   "date": "2026-11-06",
+   "title": "Joint Statement on the Developments Relating to the Palestinian Cause",
+   "issue": "Gaza Peace Agreement second phase and humanitarian access",
+   "claims": [
+    {
+     "text": "Calls for implementing the second phase of the Gaza Peace Agreement, leading to a permanent ceasefire and reconstruction.",
+     "quote": "Urge the implementation of the second phase of the Gaza Peace Agreement, leading to permanent ceasefire",
+     "type": "demand"
+    },
+    {
+     "text": "Rejects any Israeli attempts or plans to forcibly displace Palestinians, considering such acts a war crime.",
+     "quote": "reject any Israeli attempts or plans to forcibly displace the Palestinian people, whether from the Gaza Strip or the West Bank",
+     "type": "position"
+    }
+   ],
+   "key_terms": [],
+   "of_several": true,
+   "passage": "Urge the implementation of the second phase of the Gaza Peace Agreement, leading to permanent ceasefire, ending the Israeli siege and occupation, the opening of all crossing points to facilitate safe and unhindered flow of humanitarian assistance, commencing the reconstruction of Gaza, while ensuring territorial contiguity and integrity, and reject any Israeli attempts or plans to forcibly displace the Palestinian people, whether from the Gaza Strip or the West Bank, considering such acts a war crime, a flagrant violation of international humanitarian law and a grave threat to regional and international peace and security.\n- "
+  },
+  {
+   "statement_id": 546,
+   "idx": 0,
+   "actor": "au",
+   "kind": "org",
+   "date": "2026-11-06",
+   "title": "Joint Statement on the Developments Relating to the Palestinian Cause",
+   "issue": "Two-state solution and Palestinian statehood",
+   "claims": [
+    {
+     "text": "Lasting peace can only be achieved through a two-state solution with immediate and unconditional Israeli withdrawal and an independent Palestine on 1967 lines with East Jerusalem as capital.",
+     "quote": "just, lasting and comprehensive peace in the region can only be achieved through the implementation of the two-state solution",
+     "type": "position"
+    },
+    {
+     "text": "The organisations will advocate practical steps to implement the two-state solution and relevant UN resolutions.",
+     "quote": "Renew their commitments to advocate for taking practical steps to implement the two-state solution",
+     "type": "commitment"
+    }
+   ],
+   "key_terms": [
+    {
+     "term": "Israeli colonial occupation",
+     "refers_to": "Israeli occupation of Palestinian territory, as described by the statement"
+    }
+   ],
+   "of_several": true,
+   "passage": "Affirm that just, lasting and comprehensive peace in the region can only be achieved through the implementation of the two-state solution based on ending the Israeli colonial occupation and on immediate and unconditional withdrawal, in order to realize the independent and sovereign State of Palestine on the lines of 4 June 1967, with East Jerusalem as its capital, in accordance with the principles of international law, the relevant United Nations resolutions and the Arab Peace Initiative.\n- Renew their commitments to advocate for taking practical steps to implement the two-state solution,  continue working to implement the relevant resolutions of the United Nations and international organizations, and the New York Declaration (2025), and stress the need for Member States to take adequate measures in order to achieve the inalienable rights of the Palestinian people to independence, return, self-determination and statehood.\n- "
+  }
+ ]
+}

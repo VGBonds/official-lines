@@ -13,6 +13,16 @@ The site went live on 2026-11-08. Before building more, it runs for a few days u
 
 Only then do we decide which of the ideas below come first.
 
+## Evaluation of 2026-11-13: the comparison rarely fires
+
+Counted on the live site over 45 days: 1210 events, 39 with two or more actors, 2 with a contested proposition. Three causes, two of them fixed the same day:
+
+1. **Joint texts counted as several agreeing actors.** The G7 declaration reposted by five publishers read as five actors asserting eight propositions, all "uncontested majority". Fixed: a text that several actors publish is one voice in the table (Method, "One text is one voice").
+2. **Denials under-recorded.** On the Joshua Wong event China asserted that the sentence was a lawful application of the law and ten governments called the prosecutions unjust, yet no denial was recorded: one contested row of eight. Fixed in the prompt: a stance is checked for every actor and every proposition, incompatibility counts as denial, mirror-image propositions are merged. A golden set (`official-lines golden`) now guards both fixes.
+3. **The counter-voices are missing.** In multi-actor events the UK, EU, France and China dominate; the US appears twice, Iran, India and Israel never. Open: see "More coverage" below, with priority for missing sides over volume. The UN's own meeting records (press.un.org) quote every delegation on one event and are the richest single "same event, many actors" source; whether a UN summary of a delegate counts as official first-hand speech is an editor's decision still to take.
+
+Also noted, not yet done: the front page lists every single-actor event (1.3 MB of HTML, growing); no RSS output, sitemap or analytics; the shared-wording page is dominated by boilerplate (letterhead phrases shared by Saudi Arabia and the OIC in 117 statement pairs); per-event propositions cannot be compared across events, which a fixed proposition bank per theme would allow (see "Group events into themes").
+
 ## Directions (raised 2026-11-08)
 
 Suggested order after the evaluation: **coverage → ranking → themes**, then economics and timelines. That goes from cheapest to most valuable without building on sand.

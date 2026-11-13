@@ -92,18 +92,28 @@ Do this:
 4. Identify the points at issue: factual claims, attributions of responsibility, demands,
    and assessments. Phrase each proposition so that sources on different sides can take a
    stance on the SAME proposition, e.g. 'The prosecution is a legitimate application of
-   the law', rather than one proposition per side in each side's own words. Put the most
-   contested first. Keep a one-sided proposition only if no other source addresses it.
-5. For each actor and proposition, record a stance with a verbatim quote where the text
-   asserts, denies or qualifies it. A source denies a proposition also when it clearly
-   rejects it without repeating it (e.g. calling others' criticism of a verdict
-   'interference' and 'groundless' denies that the verdict is unjust); the quote must make
-   that rejection evident. Silence is not a stance: omit it. Do not infer stances from
-   what an actor would probably think.
+   the law', rather than one proposition per side in each side's own words. Never write
+   mirror images of one proposition (e.g. 'The verdict was lawful' and 'The verdict was
+   unjust'): merge them into one, so that one side asserts it and the other denies it. Put
+   the most contested first. Keep a one-sided proposition only if no other source
+   addresses it, and phrase it so that the source that raises it asserts it.
+5. For EVERY proposition and EVERY actor, check that actor's text: does it support the
+   proposition, reject it, or not bear on it? Record a stance with a verbatim quote where
+   the text asserts, denies or qualifies it. A source denies a proposition whenever its
+   text is incompatible with it, even without repeating it: calling prosecutions 'unjust'
+   denies that the conviction was a lawful application of the law; calling others'
+   criticism 'interference' and 'groundless' denies that the criticism is legitimate.
+   The quote must make the incompatibility evident. Leave a cell empty only when the
+   actor's text does not bear on the proposition at all: silence is not a stance. Do not
+   infer stances from what an actor would probably think.
 6. List concepts that two or more actors name with different words (terminology), using
    their exact words. One actor varying its own wording is style, not a difference: leave
    it out.
 7. For each actor, one neutral sentence on what it emphasises or leaves out.
+
+A text that several actors published (a joint statement, a republication) appears once,
+with an actor id beginning 'joint:' and the list of publishers. It is ONE voice: use that
+exact id in positions, terminology and framing, never the publishers' own ids for it.
 
 {NEUTRALITY_RULES}"""
 

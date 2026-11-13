@@ -18,6 +18,12 @@ unusual alignment a pair whose agreement here differs by >= 0.5 from its average
                   earlier events (needs >= 3 earlier events with both actors).
 shared wording    two different actors whose texts share long identical word sequences
                   (8+ words): a sign of a joint statement or common talking points.
+joint voice       a text that several actors publish (a joint statement, a republication) is
+                  ONE column in the stance table, "joint:CA+FR+GB", however many publish it.
+                  For pair agreement each publisher inherits the joint voice's stances. The
+                  agreement between two co-publishers of the same text is recorded but
+                  flagged "joint" and left out of the polar pair, the unusual-alignment flags
+                  and the history baseline: co-signing is shared wording, not a measurement.
 """
 
 import re
@@ -34,28 +40,76 @@ def pair_key(a: str, b: str) -> str:
     return "|".join(sorted((a, b)))
 
 
+_CAUTION = {"denies": 2, "qualifies": 1, "asserts": 0}
+
+
+def _record(table: dict[str, dict[str, str]], actor: str, pid: str, stance: str) -> None:
+    """Keep the most cautious of several stances: a denial wins over a qualification, which
+    wins over an assertion."""
+    current = table[actor].get(pid)
+    if current is None or _CAUTION[stance] > _CAUTION[current]:
+        table[actor][pid] = stance
+
+
 def stance_table(positions: list[dict]) -> dict[str, dict[str, str]]:
-    """actor -> proposition id -> stance. If an actor has several stances, a denial wins
-    over a qualification, which wins over an assertion (the most cautious reading)."""
-    rank = {"denies": 2, "qualifies": 1, "asserts": 0}
+    """voice -> proposition id -> stance. A voice is an actor id or a joint voice id."""
     table: dict[str, dict[str, str]] = defaultdict(dict)
     for p in positions:
-        current = table[p["actor"]].get(p["proposition_id"])
-        if current is None or rank[p["stance"]] > rank[current]:
-            table[p["actor"]][p["proposition_id"]] = p["stance"]
+        _record(table, p["actor"], p["proposition_id"], p["stance"])
     return dict(table)
 
 
-def pair_agreements(table: dict[str, dict[str, str]]) -> dict[str, dict]:
+def fill_from_joint(table: dict[str, dict[str, str]],
+                    voices: dict[str, list[str]]) -> dict[str, dict[str, str]]:
+    """A publisher of a joint text that also spoke on its own has a column of its own. Where
+    that column is blank, it takes the joint text's stance, so that the actor's own column
+    is never read as silence on something it signed. Publishers without a column of their
+    own are represented by the joint voice alone."""
+    out = {voice: dict(stances) for voice, stances in table.items()}
+    for voice, members in voices.items():
+        for actor in members:
+            if actor in out:
+                for pid, stance in table.get(voice, {}).items():
+                    out[actor].setdefault(pid, stance)
+    return out
+
+
+def expand_voices(table: dict[str, dict[str, str]],
+                  voices: dict[str, list[str]]) -> dict[str, dict[str, str]]:
+    """The stance table per actor: each publisher of a joint voice inherits its stances,
+    combined with the actor's own stances by the cautious rule."""
+    out: dict[str, dict[str, str]] = defaultdict(dict)
+    for voice, stances in table.items():
+        for actor in voices.get(voice, [voice]):
+            for pid, stance in stances.items():
+                _record(out, actor, pid, stance)
+    return dict(out)
+
+
+def joint_pairs(voices: dict[str, list[str]]) -> set[str]:
+    """Pairs of actors that published the same text."""
+    return {pair_key(a, b) for members in voices.values()
+            for a, b in combinations(sorted(members), 2)}
+
+
+def pair_agreements(table: dict[str, dict[str, str]],
+                    joint: set[str] | None = None) -> dict[str, dict]:
     result = {}
     for a, b in combinations(sorted(table), 2):
         shared = set(table[a]) & set(table[b])
         if not shared:
             continue
         diffs = [abs(STANCE_VALUE[table[a][p]] - STANCE_VALUE[table[b][p]]) for p in shared]
-        result[pair_key(a, b)] = {"score": round(1 - sum(diffs) / len(diffs), 3),
-                                  "shared": len(shared)}
+        key = pair_key(a, b)
+        result[key] = {"score": round(1 - sum(diffs) / len(diffs), 3), "shared": len(shared)}
+        if joint and key in joint:
+            result[key]["joint"] = True
     return result
+
+
+def measured(pairs: dict[str, dict]) -> dict[str, dict]:
+    """Pairs whose agreement was measured, i.e. not co-publishers of one text."""
+    return {k: v for k, v in pairs.items() if not v.get("joint")}
 
 
 def _speakers(table: dict[str, dict[str, str]]) -> list[str]:
@@ -93,7 +147,7 @@ def contested(table: dict[str, dict[str, str]], proposition_ids: list[str]) -> l
 
 
 def polar_pair(pairs: dict[str, dict]) -> dict | None:
-    candidates = [(v["score"], k) for k, v in pairs.items() if v["shared"] >= 2]
+    candidates = [(v["score"], k) for k, v in measured(pairs).items() if v["shared"] >= 2]
     if not candidates:
         return None
     score, key = min(candidates)
@@ -102,7 +156,7 @@ def polar_pair(pairs: dict[str, dict]) -> dict | None:
 
 def unusual_alignment(pairs: dict[str, dict], history: dict[str, list[float]]) -> list[dict]:
     flags = []
-    for key, v in pairs.items():
+    for key, v in measured(pairs).items():
         past = history.get(key, [])
         if len(past) < MIN_HISTORY:
             continue
@@ -156,11 +210,24 @@ def contrasting_terms(terminology: list[dict]) -> list[dict]:
     return kept
 
 
-def compute(analysis: dict, texts_by_actor: dict[str, str],
-            history: dict[str, list[float]]) -> dict:
-    table = stance_table(analysis["positions"])
+def one_sided_denials(table: dict[str, dict[str, str]], proposition_ids: list[str]) -> list[str]:
+    """Propositions that someone denies and nobody asserts: usually the mirror image of
+    another proposition, which the prompt asks the model to avoid."""
+    out = []
+    for pid in proposition_ids:
+        stances = {t.get(pid) for t in table.values()}
+        if "denies" in stances and "asserts" not in stances:
+            out.append(pid)
+    return out
+
+
+def compute(analysis: dict, texts_by_actor: dict[str, str], history: dict[str, list[float]],
+            voices: dict[str, list[str]] | None = None) -> dict:
+    """voices: joint voice id -> the actors that published that text (see analyze.py)."""
+    voices = voices or {}
+    table = fill_from_joint(stance_table(analysis["positions"]), voices)
     prop_ids = [p["id"] for p in analysis["propositions"]]
-    pairs = pair_agreements(table)
+    pairs = pair_agreements(expand_voices(table, voices), joint_pairs(voices))
     return {
         "stance_table": table,
         "pairs": pairs,

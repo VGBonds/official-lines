@@ -1,0 +1,281 @@
+{
+ "why": "China's foreign ministry against a ten-country joint statement that Germany, France, the UK and the US each published: one joint text, and near-total disagreement between it and China. Judged 2026-11-13: the earlier comparison recorded one contested proposition out of eight and no denial by China of the 'unjust prosecutions' line.",
+ "title": "Sentencing of Joshua Wong Chi-fung under the Hong Kong National Security Law",
+ "actors": [
+  "CN",
+  "DE",
+  "FR",
+  "GB",
+  "US"
+ ],
+ "expect": {
+  "joint": [
+   [
+    "DE",
+    "FR",
+    "GB",
+    "US"
+   ]
+  ],
+  "contested_min": 2,
+  "opposed": [
+   [
+    "CN",
+    "GB"
+   ],
+   [
+    "CN",
+    "DE"
+   ]
+  ],
+  "no_one_sided_denials": true
+ },
+ "parts": [
+  {
+   "statement_id": 82,
+   "idx": 1,
+   "actor": "CN",
+   "kind": "mfa",
+   "date": "2026-11-05",
+   "title": "Foreign Ministry Spokesperson Guo Jiakun’s Regular Press Conference on November 5, 2026",
+   "issue": "Sentencing of Joshua Wong Chi-fung in Hong Kong",
+   "claims": [
+    {
+     "text": "Wong Chi-fung is guilty of conspiracy to collude with a foreign country or external elements to endanger national security.",
+     "quote": "Wong Chi-fung is guilty of conspiracy to collude with a foreign country or external elements to endanger national security",
+     "type": "fact"
+    },
+    {
+     "text": "Wong pleaded guilty.",
+     "quote": "Wong had no grounds to justify his behavior and pleaded guilty.",
+     "type": "fact"
+    },
+    {
+     "text": "The central government firmly supports the Hong Kong SAR in punishing acts that endanger national security.",
+     "quote": "The central government of China firmly supports the Hong Kong SAR in safeguarding national security",
+     "type": "position"
+    },
+    {
+     "text": "Relevant parties should stop making remarks on the SAR's judicial process and stop interfering in Hong Kong's judicial affairs.",
+     "quote": "stop making irresponsible remarks on the SAR’s judicial process, and stop interfering in Hong Kong’s judicial affairs",
+     "type": "demand"
+    }
+   ],
+   "key_terms": [],
+   "of_several": true,
+   "passage": "Hong Kong upholds the rule of law. To abide by the law and bring lawbreakers to justice is a basic principle. Wong Chi-fung is guilty of conspiracy to collude with a foreign country or external elements to endanger national security, and the offence has been found to be of a grave nature. In the face of overwhelming facts and evidence, Wong had no grounds to justify his behavior and pleaded guilty. The central government of China firmly supports the Hong Kong SAR in safeguarding national security and punishing in accordance with the law acts that endanger national security. Relevant parties need to respect China’s sovereignty and the rule of law in Hong Kong, stop making irresponsible remarks on the SAR’s judicial process, and stop interfering in Hong Kong’s judicial affairs and China’s internal affairs in any form.\nGlobal Times: It is reported that the Japanese government is set to approve the updated three security documents in December. Sources have said that Japan will continue to position China as its “greatest strategic challenge” in the updated documents, and will nearly double its defense spending over the next five years, with a total reaching 70 trillion to 80 trillion yen. It will focus on stepping up offensive military capabilities such as long-range strikes and unmanned combat. What’s China’s comment on this?\nGuo Jiakun: "
+  },
+  {
+   "statement_id": 226,
+   "idx": 0,
+   "actor": "DE",
+   "kind": "mfa",
+   "date": "2026-11-06",
+   "title": "Press release Statement on the sentencing of Joshua Wong",
+   "issue": "Sentencing of Joshua Wong under the National Security Law, Nov 2026",
+   "claims": [
+    {
+     "text": "Joshua Wong was sentenced to 10 years imprisonment following a further charge under the National Security Law.",
+     "quote": "Yesterday, Joshua Wong was sentenced to 10 years imprisonment following a further charge under the Beijing-imposed National Security Law (NSL).",
+     "type": "fact"
+    },
+    {
+     "text": "Leaders of the Hong Kong Alliance were convicted under the same legislation months earlier.",
+     "quote": "This comes just months after leaders of the Hong Kong Alliance were convicted under the same legislation.",
+     "type": "fact"
+    },
+    {
+     "text": "The National Security Law is being used to target individuals for political expression and participation.",
+     "quote": "These are further examples of how the NSL is being used to target individuals for political expression and participation.",
+     "type": "accusation"
+    },
+    {
+     "text": "Calls for an immediate end to all unjust prosecutions of individuals charged under the National Security Law.",
+     "quote": "We call for an immediate end to all unjust prosecutions of individuals charged under the NSL",
+     "type": "demand"
+    },
+    {
+     "text": "Calls on authorities in China and Hong Kong to uphold international commitments and rights guaranteed under the Sino-British Joint Declaration (1984).",
+     "quote": "urge the authorities in China and Hong Kong to uphold their international commitments and honour the rights and freedoms guaranteed to the people of Hong Kong under the Sino-British Joint Declaration (1984).",
+     "type": "demand"
+    }
+   ],
+   "key_terms": [
+    {
+     "term": "Beijing-imposed National Security Law (NSL)",
+     "refers_to": "Hong Kong's National Security Law, which the statement says was imposed by Beijing"
+    },
+    {
+     "term": "unjust prosecutions",
+     "refers_to": "Prosecutions under the National Security Law that the signatories consider unjust"
+    }
+   ],
+   "of_several": false,
+   "passage": "Welcome\nStatement on the sentencing of Joshua Wong\nJoint statement from the foreign ministries of Australia, Canada, France, Germany, Italy, Japan, the Netherlands, New Zealand, the United Kingdom, and the United States.\nYesterday, Joshua Wong was sentenced to 10 years imprisonment following a further charge under the Beijing-imposed National Security Law (NSL). This comes just months after leaders of the Hong Kong Alliance were convicted under the same legislation. These are further examples of how the NSL is being used to target individuals for political expression and participation.\nWe call for an immediate end to all unjust prosecutions of individuals charged under the NSL and urge the authorities in China and Hong Kong to uphold their international commitments and honour the rights and freedoms guaranteed to the people of Hong Kong under the Sino-British Joint Declaration (1984)."
+  },
+  {
+   "statement_id": 204,
+   "idx": 0,
+   "actor": "FR",
+   "kind": "mfa",
+   "date": "2026-11-06",
+   "title": "Statement on the sentencing of Joshua Wong",
+   "issue": "Sentencing of Joshua Wong under Hong Kong National Security Law, 6 Nov 2026",
+   "claims": [
+    {
+     "text": "Joshua Wong was sentenced to 10 years' imprisonment following a further charge under the National Security Law.",
+     "quote": "Joshua Wong was sentenced to 10 years’ imprisonment following a further charge under the National Security Law (NSL).",
+     "type": "fact"
+    },
+    {
+     "text": "The sentencing comes months after leaders of the Hong Kong Alliance were convicted under the same legislation.",
+     "quote": "This comes just months after leaders of the Hong Kong Alliance were convicted under the same legislation.",
+     "type": "fact"
+    },
+    {
+     "text": "The NSL is being used to target individuals for political expression and participation.",
+     "quote": "These are further examples of how the NSL is being used to target individuals for political expression and participation.",
+     "type": "accusation"
+    },
+    {
+     "text": "The signatories call for an immediate end to all unjust prosecutions of individuals charged under the NSL.",
+     "quote": "We call for an immediate end to all unjust prosecutions of individuals charged under the NSL",
+     "type": "demand"
+    },
+    {
+     "text": "The signatories urge China and Hong Kong authorities to uphold international commitments and the rights guaranteed under the Sino-British Joint Declaration (1984).",
+     "quote": "urge the authorities in China and Hong Kong to uphold their international commitments and honour the rights and freedoms guaranteed to the people of Hong Kong under the Sino-British Joint Declaration (1984).",
+     "type": "demand"
+    }
+   ],
+   "key_terms": [
+    {
+     "term": "National Security Law (NSL)",
+     "refers_to": "Hong Kong national security legislation under which Joshua Wong and others were charged"
+    }
+   ],
+   "of_several": false,
+   "passage": "Statement on the sentencing of Joshua Wong Hong Kong Human rights Joint statement On : November 06th 2026 Joint statement from the foreign ministries of Australia, Canada, France, Germany, Italy, Japan, the Netherlands, New Zealand, the United Kingdom, and the United States. Joshua Wong was sentenced to 10 years’ imprisonment following a further charge under the National Security Law (NSL). This comes just months after leaders of the Hong Kong Alliance were convicted under the same legislation. These are further examples of how the NSL is being used to target individuals for political expression and participation. We call for an immediate end to all unjust prosecutions of individuals charged under the NSL and urge the authorities in China and Hong Kong to uphold their international commitments and honour the rights and freedoms guaranteed to the people of Hong Kong under the Sino-British Joint Declaration (1984)."
+  },
+  {
+   "statement_id": 167,
+   "idx": 0,
+   "actor": "GB",
+   "kind": "mfa",
+   "date": "2026-11-06",
+   "title": "Statement on the sentencing of Joshua Wong",
+   "issue": "Sentencing of Joshua Wong under the National Security Law, Nov 2026",
+   "claims": [
+    {
+     "text": "Joshua Wong was sentenced to 10 years' imprisonment following a further charge under the National Security Law.",
+     "quote": "Joshua Wong was sentenced to 10 years’ imprisonment following a further charge under the National Security Law (NSL).",
+     "type": "fact"
+    },
+    {
+     "text": "Leaders of the Hong Kong Alliance were convicted under the same legislation months earlier.",
+     "quote": "This comes just months after leaders of the Hong Kong Alliance were convicted under the same legislation.",
+     "type": "fact"
+    },
+    {
+     "text": "The NSL is being used to target individuals for political expression and participation.",
+     "quote": "These are further examples of how the NSL is being used to target individuals for political expression and participation.",
+     "type": "accusation"
+    },
+    {
+     "text": "The signatories call for an immediate end to all unjust prosecutions of individuals charged under the NSL.",
+     "quote": "We call for an immediate end to all unjust prosecutions of individuals charged under the NSL",
+     "type": "demand"
+    },
+    {
+     "text": "The signatories urge China and Hong Kong authorities to uphold international commitments and rights guaranteed under the Sino-British Joint Declaration (1984).",
+     "quote": "urge the authorities in China and Hong Kong to uphold their international commitments and honour the rights and freedoms guaranteed to the people of Hong Kong under the Sino-British Joint Declaration (1984).",
+     "type": "demand"
+    }
+   ],
+   "key_terms": [
+    {
+     "term": "National Security Law (NSL)",
+     "refers_to": "Hong Kong national security legislation under which the charges were brought"
+    }
+   ],
+   "of_several": false,
+   "passage": "Statement on the sentencing of Joshua Wong\nJoint statement from the foreign ministries of Australia, Canada, France, Germany, Italy, Japan, the Netherlands, New Zealand, the United Kingdom, and the United States.\nJoshua Wong was sentenced to 10 years’ imprisonment following a further charge under the National Security Law (NSL). This comes just months after leaders of the Hong Kong Alliance were convicted under the same legislation. These are further examples of how the NSL is being used to target individuals for political expression and participation. We call for an immediate end to all unjust prosecutions of individuals charged under the NSL and urge the authorities in China and Hong Kong to uphold their international commitments and honour the rights and freedoms guaranteed to the people of Hong Kong under the Sino-British Joint Declaration (1984)."
+  },
+  {
+   "statement_id": 37,
+   "idx": 2,
+   "actor": "US",
+   "kind": "mfa",
+   "date": "2026-11-06",
+   "title": "Joint Statement on the Conviction of Hong Kong Alliance Leaders and Sentencing of Joshua Wong",
+   "issue": "Hong Kong's obligations under the Sino-British Joint Declaration",
+   "claims": [
+    {
+     "text": "Authorities in China and Hong Kong should uphold their international commitments and the rights and freedoms guaranteed to Hong Kong people under the Sino-British Joint Declaration.",
+     "quote": "urge the authorities in China and Hong Kong to uphold their international commitments and honor the rights and freedoms guaranteed to the people of Hong Kong under the Sino-British Joint Declaration (1984).",
+     "type": "demand"
+    }
+   ],
+   "key_terms": [],
+   "of_several": true,
+   "passage": "urge the authorities in China and Hong Kong to uphold their international commitments and honor the rights and freedoms guaranteed to the people of Hong Kong under the Sino-British Joint Declaration (1984). End Text. Tags Bureau of East Asian and Pacific Affairs China Freedom of Speech and Expression Fundamental Freedoms Hong Kong Office of the Spokesman"
+  },
+  {
+   "statement_id": 37,
+   "idx": 1,
+   "actor": "US",
+   "kind": "mfa",
+   "date": "2026-11-06",
+   "title": "Joint Statement on the Conviction of Hong Kong Alliance Leaders and Sentencing of Joshua Wong",
+   "issue": "Conviction of Hong Kong Alliance leaders under the National Security Law",
+   "claims": [
+    {
+     "text": "Leaders of the Hong Kong Alliance were convicted under the National Security Law a few months before Joshua Wong's sentencing.",
+     "quote": "This comes just months after leaders of the Hong Kong Alliance were convicted under the same legislation.",
+     "type": "fact"
+    }
+   ],
+   "key_terms": [],
+   "of_several": true,
+   "passage": "This comes just months after leaders of the Hong Kong Alliance were convicted under the same legislation. These are further examples of how the NSL is being used to target individuals for political expression and participation. We call for an immediate end to all unjust prosecutions of individuals charged under the NSL and "
+  },
+  {
+   "statement_id": 37,
+   "idx": 0,
+   "actor": "US",
+   "kind": "mfa",
+   "date": "2026-11-06",
+   "title": "Joint Statement on the Conviction of Hong Kong Alliance Leaders and Sentencing of Joshua Wong",
+   "issue": "Sentencing of Joshua Wong under the National Security Law, Hong Kong, Nov 2026",
+   "claims": [
+    {
+     "text": "Joshua Wong was sentenced to 10 years' imprisonment following a further charge under the National Security Law.",
+     "quote": "Joshua Wong was sentenced to 10 years’ imprisonment following a further charge under the National Security Law (NSL).",
+     "type": "fact"
+    },
+    {
+     "text": "The National Security Law is being used to target individuals for political expression and participation.",
+     "quote": "These are further examples of how the NSL is being used to target individuals for political expression and participation.",
+     "type": "accusation"
+    },
+    {
+     "text": "Governments call for an immediate end to all unjust prosecutions of individuals charged under the National Security Law.",
+     "quote": "We call for an immediate end to all unjust prosecutions of individuals charged under the NSL",
+     "type": "demand"
+    }
+   ],
+   "key_terms": [
+    {
+     "term": "unjust prosecutions",
+     "refers_to": "Prosecutions under the National Security Law that the signatories consider unjust"
+    },
+    {
+     "term": "NSL",
+     "refers_to": "The National Security Law applied in Hong Kong"
+    }
+   ],
+   "of_several": true,
+   "passage": "Joshua Wong was sentenced to 10 years’ imprisonment following a further charge under the National Security Law (NSL). "
+  }
+ ]
+}

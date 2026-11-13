@@ -96,7 +96,8 @@ class Proposition(BaseModel):
 
 
 class Position(BaseModel):
-    actor: str = Field(description="Actor id exactly as given in the input (e.g. 'CN', 'un').")
+    actor: str = Field(description="Actor id exactly as given in the input: 'CN', 'un', or a "
+                       "joint voice such as 'joint:CA+FR+GB'.")
     proposition_id: str
     stance: Stance
     quote: str = Field(description="Verbatim excerpt (max ~30 words) showing the stance.")

@@ -33,3 +33,15 @@ def test_group_by_actors_and_spans():
     assert groups[0]["actors"] == ["FR", "GB"] and groups[0]["passages"] == 1
     o = passages[0]["occurrences"][0]
     assert wording.in_span(o, None, None) and not wording.in_span(o, o["end"], o["end"] + 50)
+
+
+def test_same_text_groups_find_joint_texts_but_not_quotes():
+    long_joint = " ".join(f"word{i}" for i in range(80))
+    groups = wording.same_text_groups({
+        1: "Paris. " + long_joint + " Additional French paragraph with more words here.",
+        2: long_joint,
+        3: "Berlin, 9 November. " + long_joint,
+        4: " ".join(f"other{i}" for i in range(80)),            # a different text
+        5: "A quote: " + " ".join(f"word{i}" for i in range(20)),  # too short to be joint
+    })
+    assert groups == [{1, 2, 3}]

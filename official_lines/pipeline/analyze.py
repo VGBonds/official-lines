@@ -9,6 +9,15 @@ Two queues, each with its own daily allowance (`max_per_day`):
 The input is the parts (one issue each) filed under the event: for each, the extracted
 claims and the passage of the original text it comes from.
 
+A text that several actors publish (a joint statement, a verbatim republication) goes into
+the comparison once, as one joint voice ("joint:CA+FR+GB") with its publishers named, so
+that one text never counts as several agreeing actors. Detection is plain text comparison
+(wording.same_text_groups), no AI.
+
+`compare()` is the comparison itself and does not touch the database, so the golden set
+(golden.py) can run it on stored inputs. `analyze_event()` loads the parts, calls it and
+stores the result.
+
 Only events where at least MIN_ACTORS different actors spoke are analysed, at most once a
 day each, and at most `max_per_day` analyses a day in total. This keeps cost predictable.
 """
@@ -25,7 +34,7 @@ from official_lines.db import dumps, loads, now_iso, transaction
 from official_lines.llm import prompts
 from official_lines.llm.client import LLM, LLMError
 from official_lines.llm.schemas import EventAnalysis
-from official_lines.pipeline import metrics
+from official_lines.pipeline import metrics, wording
 from official_lines.pipeline.events import PART_COLUMNS
 
 log = logging.getLogger(__name__)
@@ -36,6 +45,7 @@ TEXT_EXCERPT_CHARS = 3000
 REANALYSE_AFTER_HOURS = 20
 SILENCE_LOOKBACK_DAYS = 60
 SILENCE_MIN_STATEMENTS = 2
+JOINT_PREFIX = "joint:"
 
 
 def analyses_today(conn: sqlite3.Connection, purpose: str = "analyze") -> int:
@@ -133,35 +143,6 @@ def select_parts(conn: sqlite3.Connection, event_id: int) -> list[sqlite3.Row]:
     return list(reversed(kept))
 
 
-def analyze_event(conn: sqlite3.Connection, catalog: Catalog, llm: LLM, model: str,
-                  event: sqlite3.Row, purpose: str = "analyze") -> dict:
-    parts = select_parts(conn, event["id"])
-    user = prompts.ANALYZE_USER.format(
-        title=event["title"], statements="\n\n".join(_describe(p, catalog) for p in parts))
-    result = llm.structured(purpose=purpose, model=model, system=prompts.ANALYZE_SYSTEM,
-                            user=user, schema=EventAnalysis, max_tokens=16000, effort="medium")
-    analysis = result.model_dump()
-
-    texts: dict[str, str] = defaultdict(str)
-    for p in parts:
-        texts[p["actor"]] += " " + passage(p)
-    computed = metrics.compute(analysis, texts, pair_history(conn, exclude_event=event["id"]))
-    computed["silent"] = silent_actors(conn, event["id"], parts)
-
-    payload = {"llm": analysis, "metrics": computed, "model": model,
-               "part_ids": [p["id"] for p in parts],
-               "actors": sorted({p["actor"] for p in parts})}
-    total = conn.execute("SELECT COUNT(*) FROM parts WHERE event_id=?",
-                         (event["id"],)).fetchone()[0]
-    with transaction(conn):
-        conn.execute(
-            "UPDATE events SET analysis=?, analysed_at=?, analysed_statement_count=?,"
-            " title=?, summary=? WHERE id=?",
-            (dumps(payload), now_iso(), total, result.title, result.summary, event["id"]),
-        )
-    return payload
-
-
 def passage(p: sqlite3.Row) -> str:
     """The part's own passage of the original text ('' if it could not be located)."""
     if p["text_start"] is None:
@@ -169,32 +150,122 @@ def passage(p: sqlite3.Row) -> str:
     return (p["text"] or "")[p["text_start"]:p["text_end"]]
 
 
-def _describe(p: sqlite3.Row, catalog: Catalog) -> str:
+def part_record(p: sqlite3.Row) -> dict:
+    """What the comparison needs from a part, as plain data (also the golden-set format)."""
     data = loads(p["data"]) or {}
-    claims = "\n".join(f"      - {c['text']} [quote: \"{c['quote']}\"]"
-                       for c in data.get("claims", []))
-    terms = ", ".join(f"'{t['term']}' = {t['refers_to']}" for t in data.get("key_terms", []))
-    of = f" (passage {p['idx'] + 1} of {p['n_parts']} in a multi-issue statement)" \
-        if p["n_parts"] > 1 else ""
-    return (
-        f"--- statement_id={p['statement_id']} actor={p['actor']} "
-        f"({catalog.actor(p['actor']).name}, {p['kind']}) "
-        f"date={p['date'][:10]}\n"
-        f"title: {p['title']}{of}\n"
-        f"issue: {p['issue']}\n"
-        f"extracted claims:\n{claims}\n"
-        f"key terms: {terms}\n"
-        f"text excerpt:\n{passage(p)[:TEXT_EXCERPT_CHARS] or '(not located; use the claims)'}"
-    )
+    return {"statement_id": p["statement_id"], "idx": p["idx"], "actor": p["actor"],
+            "kind": p["kind"], "date": (p["date"] or "")[:10], "title": p["title"],
+            "issue": p["issue"],
+            "claims": data.get("claims", []), "key_terms": data.get("key_terms", []),
+            "of_several": p["n_parts"] > 1, "passage": passage(p)}
+
+
+def joint_voices(parts: list[dict]) -> dict[str, dict]:
+    """Texts that several actors published: joint voice id -> members and part indexes.
+    Compared per statement (its parts in this event joined), because extraction may split
+    one publisher's copy of a joint text into several parts and another's not."""
+    by_statement: dict[int, list[int]] = defaultdict(list)
+    for i, p in sorted(enumerate(parts), key=lambda ip: ip[1].get("idx", 0)):
+        by_statement[p["statement_id"]].append(i)  # in the order the passages have in the text
+    texts = {sid: " ".join(parts[i]["passage"] for i in idx) for sid, idx in by_statement.items()}
+    voices: dict[str, dict] = {}
+    for group in wording.same_text_groups(texts):
+        indexes = sorted(i for sid in group for i in by_statement[sid])
+        members = sorted({parts[i]["actor"] for i in indexes})
+        if len(members) < 2:
+            continue
+        vid = JOINT_PREFIX + "+".join(members)
+        voices.setdefault(vid, {"members": members, "parts": []})["parts"] += indexes
+    return voices
+
+
+def compare(catalog: Catalog, llm: LLM, model: str, title: str, parts: list[dict],
+            history: dict[str, list[float]], purpose: str = "analyze") -> dict:
+    """The comparison of one event: the model's stance table plus the computed metrics.
+    `parts` are part_record() dicts; `history` the pair baseline (pair_history())."""
+    voices = joint_voices(parts)
+    joint_of = {i: vid for vid, v in voices.items() for i in v["parts"]}
+    blocks, shown = [], set()
+    for i, p in enumerate(parts):
+        vid = joint_of.get(i)
+        if vid is None:
+            blocks.append(_describe(p, catalog))
+        elif vid not in shown:
+            shown.add(vid)
+            blocks.append(_describe_joint(vid, [parts[j] for j in voices[vid]["parts"]],
+                                          catalog))
+    user = prompts.ANALYZE_USER.format(title=title, statements="\n\n".join(blocks))
+    result = llm.structured(purpose=purpose, model=model, system=prompts.ANALYZE_SYSTEM,
+                            user=user, schema=EventAnalysis, max_tokens=16000, effort="medium")
+    analysis = result.model_dump()
+
+    texts: dict[str, str] = defaultdict(str)
+    for p in parts:
+        texts[p["actor"]] += " " + p["passage"]
+    members = {vid: v["members"] for vid, v in voices.items()}
+    computed = metrics.compute(analysis, texts, history, voices=members)
+    return {"llm": analysis, "metrics": computed, "model": model,
+            "voices": {vid: {"members": v["members"],
+                             "statement_ids": sorted({parts[i]["statement_id"]
+                                                      for i in v["parts"]})}
+                       for vid, v in voices.items()},
+            "actors": sorted({p["actor"] for p in parts})}
+
+
+def analyze_event(conn: sqlite3.Connection, catalog: Catalog, llm: LLM, model: str,
+                  event: sqlite3.Row, purpose: str = "analyze") -> dict:
+    rows = select_parts(conn, event["id"])
+    payload = compare(catalog, llm, model, event["title"], [part_record(r) for r in rows],
+                      pair_history(conn, exclude_event=event["id"]), purpose)
+    payload["metrics"]["silent"] = silent_actors(conn, event["id"], rows)
+    payload["part_ids"] = [r["id"] for r in rows]
+    total = conn.execute("SELECT COUNT(*) FROM parts WHERE event_id=?",
+                         (event["id"],)).fetchone()[0]
+    with transaction(conn):
+        conn.execute(
+            "UPDATE events SET analysis=?, analysed_at=?, analysed_statement_count=?,"
+            " title=?, summary=? WHERE id=?",
+            (dumps(payload), now_iso(), total, payload["llm"]["title"],
+             payload["llm"]["summary"], event["id"]),
+        )
+    return payload
+
+
+def _claims(p: dict) -> str:
+    claims = "\n".join(f"      - {c['text']} [quote: \"{c['quote']}\"]" for c in p["claims"])
+    terms = ", ".join(f"'{t['term']}' = {t['refers_to']}" for t in p["key_terms"])
+    excerpt = p["passage"][:TEXT_EXCERPT_CHARS] or "(not located; use the claims)"
+    return (f"issue: {p['issue']}\nextracted claims:\n{claims}\nkey terms: {terms}\n"
+            f"text excerpt:\n{excerpt}")
+
+
+def _describe(p: dict, catalog: Catalog) -> str:
+    of = " (one passage of a multi-issue statement)" if p["of_several"] else ""
+    return (f"--- statement_id={p['statement_id']} actor={p['actor']} "
+            f"({catalog.actor(p['actor']).name}, {p['kind']}) date={p['date']}\n"
+            f"title: {p['title']}{of}\n{_claims(p)}")
+
+
+def _describe_joint(vid: str, group: list[dict], catalog: Catalog) -> str:
+    """One joint text, shown once with its publishers. The longest version stands for all."""
+    rep = max(group, key=lambda p: len(p["passage"]))
+    names = ", ".join(catalog.actor(a).name for a in sorted({p["actor"] for p in group}))
+    published = "; ".join(f"{catalog.actor(p['actor']).name} {p['date']}: {p['title']}"
+                          for p in group)
+    return (f"--- statement_id={rep['statement_id']} actor={vid}\n"
+            f"ONE JOINT TEXT published by {names}. Treat it as a single voice and use exactly"
+            f" the actor id '{vid}' for it.\npublished as: {published}\n{_claims(rep)}")
 
 
 def pair_history(conn: sqlite3.Connection, exclude_event: int) -> dict[str, list[float]]:
-    """Agreement scores of every actor pair over earlier analysed events (the baseline)."""
+    """Agreement scores of every actor pair over earlier analysed events (the baseline).
+    Co-publishers of one text are left out: that is shared wording, not a measurement."""
     history: dict[str, list[float]] = defaultdict(list)
     for row in conn.execute(
         "SELECT analysis FROM events WHERE analysis IS NOT NULL AND id != ?", (exclude_event,)
     ):
-        for key, v in (loads(row[0])["metrics"].get("pairs") or {}).items():
+        pairs = loads(row[0])["metrics"].get("pairs") or {}
+        for key, v in metrics.measured(pairs).items():
             history[key].append(v["score"])
     return history
 

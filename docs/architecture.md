@@ -35,7 +35,9 @@ official_lines/
     extract.py        step 1: split each statement into parts (one per issue), with
                       summary, claims + quotes, key terms; find each part's passage
     events.py         step 2: assign parts to events (or create new ones), merge duplicates
-    analyze.py        step 3: propositions × actors stance table, silence
+    analyze.py        step 3: propositions × actors stance table, silence; joint texts
+                      (one text published by several actors) become one voice
+    golden.py         the golden set: hand-judged comparisons re-run after prompt changes
     metrics.py        agreement, shared floor, contested, unusual alignment, shared wording
     wording.py        identical passages across actors (event pages + Shared wording page)
     brief.py          weekly newsletter draft
@@ -71,9 +73,13 @@ The schema has a version number (`PRAGMA user_version`). `db.py` upgrades an old
 - **AI grouping instead of embeddings.** At a few hundred statements a day, asking a cheap model to assign statements to open events costs about $1 a month and avoids heavy machine-learning libraries on a small server.
 - **Structured outputs.** The API guarantees the JSON shape (`llm/schemas.py`), so a malformed answer can't corrupt the database.
 - **Metrics outside the AI.** The AI only records who says what, with quotes. Agreement scores and flags are plain arithmetic in `metrics.py`, readable and testable.
+- **One text is one voice.** Before the comparison, `analyze.joint_voices` compares the parts' passages per statement (`wording.same_text_groups`): statements that are mostly the same text form a joint voice (`joint:CA+FR+GB`), which the model sees once and must use as one actor id. Labels (shared floor, majority, contested) count voices; pair agreements are per actor, with each publisher inheriting the joint text's stances, and pairs of co-publishers flagged `joint` and left out of the polar pair, the unusual-alignment flags and the history baseline. Without this, a G7 declaration reposted by five governments read as five agreeing actors.
+- **The comparison is separable from the database.** `analyze.compare()` takes plain part records and returns the analysis with metrics; `analyze_event()` only loads and stores. That is what lets the golden set run a comparison on stored inputs.
 - **Swappable model.** The pipeline only depends on the small `LLM` protocol in `llm/client.py`. Tests use a fake; another vendor could be added the same way.
 - **Two models.** The cheap one reads everything, the stronger one only compares events where at least two actors spoke, capped per day. When another actor joins an event after its comparison, the event is compared again on the next run (its own daily allowance), and until then its page says which actors are not in the table yet.
 
 ## Tests
 
 `uv run pytest` runs offline tests: catalog rules, parsers, metrics, and the whole pipeline with the stand-in AI, including the rule that organisations and central banks never colour the map.
+
+`uv run official-lines golden` runs the **golden set** (`tests/golden/*.json`): events judged by hand, stored with their exact comparison input, compared again with the real model and checked against coarse expectations (which actors form a joint voice, how many propositions are contested, which pairs must come out opposed or aligned, no mirror-image propositions). It costs a few cents per case. Run it after every change to `prompts.py` or `metrics.py`; add a case with `golden --export SLUG` and fill in its `expect` block (keys documented in `official_lines/pipeline/golden.py`).

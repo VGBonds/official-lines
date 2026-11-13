@@ -14,7 +14,7 @@ from official_lines.catalog import Catalog
 from official_lines.db import loads
 from official_lines.llm import prompts
 from official_lines.llm.client import LLM
-from official_lines.site.build import refresh_labels
+from official_lines.site.build import refresh_labels, voice_names
 
 MAX_EVENTS = 6
 
@@ -41,21 +41,22 @@ def write_brief(conn: sqlite3.Connection, catalog: Catalog, llm: LLM, model: str
     events = pick_events(conn, days)
     if not events:
         return None
-    material = []
+    material, names = [], {}
     for e in events:
         a = refresh_labels(loads(e["analysis"]))
+        names.update(voice_names(catalog, a))  # actors, plus any joint text's publishers
         material.append({
             "title": e["title"],
             "url": f"{site_url}/event/{e['slug']}.html",
-            "actors": sorted({p["actor"] for p in a["llm"]["positions"]}),
+            "actors": a.get("actors") or sorted({p["actor"] for p in a["llm"]["positions"]}),
+            "joint_texts": a.get("voices") or {},
             "analysis": a["llm"],
             "metrics": {k: v for k, v in a["metrics"].items() if k != "stance_table"},
         })
     text = llm.text(
         purpose="brief", model=model, system=prompts.BRIEF_SYSTEM,
         user="Events of the week (JSON):\n" + json.dumps(
-            {"actor_names": {k: v.name for k, v in catalog.actors.items()}, "events": material},
-            ensure_ascii=False, indent=1),
+            {"actor_names": names, "events": material}, ensure_ascii=False, indent=1),
         max_tokens=16000, effort="medium",
     )
     out_dir.mkdir(parents=True, exist_ok=True)
