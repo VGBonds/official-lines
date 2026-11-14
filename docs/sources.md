@@ -54,6 +54,8 @@ If you see `<rss` or `<feed` and items with `<title>` and `<link>`, add it with 
 
 Some sites build their pages with JavaScript, so the links aren't in the raw HTML. Official Lines can't read those; mark them `enabled: false, status: js_only`. Same for sites that block bots (`status: blocked`). **We do not get around blocks or CAPTCHAs.** Look for another official route instead: an embassy site, a different section of the same site, or a government press office.
 
+**Permanent missions to the UN.** Several governments whose home sites refuse data-centre addresses or publish no English publish Council and Assembly statements through their New York mission (`*-unmission` in the catalog, kind `mfa`: a mission is a body of the foreign ministry). The UN Protocol list of missions gives the official sites. A site that answers a redirect with a cookie and then the page is fine: our client keeps cookies. A CDN page that answers 200 with a script "challenge" and no links is a block, and we leave it.
+
 ## Checking candidates
 
 A new source starts as `enabled: false, status: candidate`. The `check` command tests it the way a real collection pass would (robots.txt, the same client, the same parsers) but stores nothing:

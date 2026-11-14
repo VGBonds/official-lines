@@ -16,6 +16,7 @@ countries:
   IL: {name: Israel, iso_numeric: "376", region: Middle East}
   IR: {name: Iran, iso_numeric: "364", region: Middle East}
   SA: {name: Saudi Arabia, iso_numeric: "682", region: Middle East}
+  EG: {name: Egypt, iso_numeric: "818", region: Middle East}
   ZA: {name: South Africa, iso_numeric: "710", region: Africa}
   IN: {name: India, iso_numeric: "356", region: Asia}
   CN: {name: China, iso_numeric: "156", region: Asia}

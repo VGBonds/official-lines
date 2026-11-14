@@ -1254,3 +1254,108 @@ sources:
     enabled: false
     status: blocked
     notes: "server 2026-11-09: HTTP 403; no workarounds"
+
+  # ---------------- Permanent missions to the United Nations (added 2026-11-14)
+  # A mission is a body of the foreign ministry and exists to state the country's position,
+  # so its statements are kind mfa. They are the official English channel for several
+  # countries whose home sites refuse us. Researched 2026-11-14 from the UN Protocol list of
+  # missions; candidates are checked from the server before they are enabled.
+  - id: in-unmission
+    actor: IN
+    kind: mfa
+    name: "Permanent Mission of India to the UN - Security Council statements"
+    homepage: https://pminewyork.gov.in/
+    method: html
+    url: "https://pminewyork.gov.in/unsc"
+    link_selector: "a[href]"
+    enabled: false
+    status: blocked
+    notes: "server 2026-11-14: read timeout, no answer; from a laptop the same day: time-outs and one HTTP 500. Unstable or filtered; retry in a few weeks."
+  - id: ir-unmission
+    actor: IR
+    kind: mfa
+    name: "Permanent Mission of Iran to the UN - News"
+    homepage: https://newyork.mfa.gov.ir/
+    method: html
+    url: "https://newyork.mfa.gov.ir/portal/newsarchive"
+    link_selector: "a[href]"
+    link_pattern: "/portal/NewsView/\\d+"
+    enabled: false
+    status: blocked
+    notes: "server 2026-11-14: the ArvanCloud CDN answers 200 with a 56 KB challenge page and no links, even with cookies kept (same as ir-mfa); not bypassed. The listing itself is server-rendered (links /portal/NewsView/<id>, e.g. 'Ambassador's Statement at UNSC: The Expiration of Resolution 2231' 2026-10-27), so it would work if the CDN let us through."
+  - id: il-unmission
+    actor: IL
+    kind: mfa
+    name: "Permanent Mission of Israel to the UN - Ministry of Foreign Affairs news"
+    homepage: https://embassies.gov.il/unitednations/en
+    method: html
+    url: "https://embassies.gov.il/unitednations/en/news"
+    link_selector: "a[href]"
+    link_pattern: "/unitednations/en/news/[a-z0-9-]{20,}$"
+    enabled: true
+    status: ok
+    notes: "server 2026-11-14: OK, 5 links, statement text up to 5,186 chars (e.g. 'President Herzog addresses the opening session of the 26th Knesset' 2026-11-10). Carries the foreign ministry's general news (gov.il itself refuses data-centre addresses), not Council statements; the old statements archive is 404; no RSS; only ~5 items per page."
+  - id: pk-unmission
+    actor: PK
+    kind: mfa
+    name: "Permanent Mission of Pakistan to the UN - Official statements"
+    homepage: https://pakun.org/
+    method: html
+    url: "https://pakun.org/"
+    link_selector: "a[href]"
+    link_pattern: "/official-statements/\\d{8}-\\d+$"
+    enabled: false
+    status: js_only
+    notes: "server 2026-11-14: the home page lists the latest ~6 statements server-rendered (e.g. 'Statement by Ambassador Syed Haider Shah at the UN Security Council' 2026-11-10), but a statement page gives only ~280 chars: the text is fetched by script from an API that refuses direct requests. Pakistan sits on the Security Council in 2025-26, so this is a loss; a browser-based fetch is the only route."
+  - id: tr-unmission
+    actor: TR
+    kind: mfa
+    name: "Permanent Mission of Türkiye to the UN - Speeches and statements"
+    homepage: https://turkuno-dt.mfa.gov.tr/Mission/Index
+    method: html
+    url: "https://turkuno-dt.mfa.gov.tr/Mission/ChiefSpeeches"
+    link_selector: "table.table td:nth-child(3) a"
+    link_pattern: "/Mission/ShowSpeech/(148\\d\\d|149\\d\\d|1[5-9]\\d{3})$"
+    enabled: true
+    status: ok
+    notes: "server 2026-11-14: OK, 32 links, text up to 5,031 chars. One table, newest first after five pinned presidential speeches; the third column's link carries the title (the first is the date). The page lists every speech since 2012 (2,199), so the pattern keeps ids from 14800 (July 2025) on: widen it when ids pass 19999. Statement pages parse with title, date and text (e.g. 'UNSC Arria-Formula Meeting - Safe Seas, Shared Security' 2026-09-17); the session cookie the listing sets is kept by our client; no RSS."
+  - id: sa-unmission
+    actor: SA
+    kind: mfa
+    name: "Permanent Mission of Saudi Arabia to the UN"
+    homepage: https://www.mofa.gov.sa/en
+    method: html
+    url: "https://www.un.int/saudiarabia"
+    enabled: false
+    status: not_found
+    notes: "2026-11-14: no mission website; the UN Protocol list gives only an e-mail address, un.int/saudiarabia is 404. The ministry's own statements (sa-mofa-*) are read."
+  - id: eg-unmission
+    actor: EG
+    kind: mfa
+    name: "Permanent Mission of Egypt to the UN"
+    homepage: https://www.mfa.gov.eg/
+    method: html
+    url: "http://www.egyptmissionny.com/"
+    enabled: false
+    status: not_found
+    notes: "2026-11-14: the mission's domain in the UN Protocol list has lapsed (parked page), un.int/egypt is 404; the ministry site is Arabic-first. No readable official English channel found yet."
+  - id: za-unmission
+    actor: ZA
+    kind: mfa
+    name: "Permanent Mission of South Africa to the UN"
+    homepage: https://dirco.gov.za/
+    method: html
+    url: "https://www.southafrica-newyork.net/"
+    enabled: false
+    status: not_found
+    notes: "2026-11-14: the old mission domain still carries the mission's title but its feed is unrelated spam (expired or hijacked): not used. UN statements are published on DIRCO's site, which za-dirco reads."
+  - id: id-unmission
+    actor: ID
+    kind: mfa
+    name: "Permanent Mission of Indonesia to the UN"
+    homepage: https://www.kemlu.go.id/newyork-un/en
+    method: html
+    url: "https://www.kemlu.go.id/newyork-un/en"
+    enabled: false
+    status: js_only
+    notes: "2026-11-14: the page is a script shell (1.9 KB, no links); the listing comes from a separate data service. Not read."
