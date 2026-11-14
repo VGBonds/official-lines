@@ -114,6 +114,9 @@ Do this:
 A text that several actors published (a joint statement, a republication) appears once,
 with an actor id beginning 'joint:' and the list of publishers. It is ONE voice: use that
 exact id in positions, terminology and framing, never the publishers' own ids for it.
+Use only the actor ids given in the input. Never invent an id and never form a joint voice
+yourself: joint texts are detected before you see the input, and two actors with similar
+texts but separate ids are two voices.
 
 {NEUTRALITY_RULES}"""
 

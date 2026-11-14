@@ -197,7 +197,7 @@ def compare(catalog: Catalog, llm: LLM, model: str, title: str, parts: list[dict
     user = prompts.ANALYZE_USER.format(title=title, statements="\n\n".join(blocks))
     result = llm.structured(purpose=purpose, model=model, system=prompts.ANALYZE_SYSTEM,
                             user=user, schema=EventAnalysis, max_tokens=16000, effort="medium")
-    analysis = result.model_dump()
+    analysis = resolve_voices(result.model_dump(), {p["actor"] for p in parts}, set(voices))
 
     texts: dict[str, str] = defaultdict(str)
     for p in parts:
@@ -210,6 +210,34 @@ def compare(catalog: Catalog, llm: LLM, model: str, title: str, parts: list[dict
                                                       for i in v["parts"]})}
                        for vid, v in voices.items()},
             "actors": sorted({p["actor"] for p in parts})}
+
+
+def resolve_voices(analysis: dict, actors: set[str], voices: set[str]) -> dict:
+    """Keep the model to the ids it was given. A position, term usage or framing under an
+    id that is neither an actor of the event nor one of its joint voices is dropped, with
+    one exception: a joint id the model formed itself from known actors ('joint:GB+FI')
+    becomes one entry per member, since the model asserts that stance for each of them."""
+    known = actors | voices
+
+    def members(actor: str) -> list[str]:
+        if actor in known:
+            return [actor]
+        if actor.startswith(JOINT_PREFIX):
+            parts = actor[len(JOINT_PREFIX):].split("+")
+            if parts and all(a in actors for a in parts):
+                return parts
+        log.warning("dropping an entry for unknown actor id %r (known: %s)",
+                    actor, ", ".join(sorted(known)))
+        return []
+
+    def expand(entries: list[dict]) -> list[dict]:
+        return [{**e, "actor": a} for e in entries for a in members(e["actor"])]
+
+    analysis["positions"] = expand(analysis["positions"])
+    analysis["framing"] = expand(analysis["framing"])
+    analysis["terminology"] = [{**t, "usages": expand(t["usages"])}
+                               for t in analysis["terminology"]]
+    return analysis
 
 
 def analyze_event(conn: sqlite3.Connection, catalog: Catalog, llm: LLM, model: str,

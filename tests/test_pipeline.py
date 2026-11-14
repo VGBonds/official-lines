@@ -269,3 +269,29 @@ def test_joint_text_is_one_voice(conn, catalog, tmp_path):
     matrix = page[page.index('<table class="matrix">'):page.index("</table>")]
     assert matrix.count("<th>") == 3  # proposition + two voices
     assert "published the same text" in page
+
+
+def test_resolve_voices_keeps_the_model_to_known_ids():
+    from official_lines.pipeline.analyze import resolve_voices
+    analysis = {
+        "positions": [{"actor": "CN", "proposition_id": "p1", "stance": "asserts", "quote": "a"},
+                      {"actor": "joint:placeholder", "proposition_id": "p1", "stance": "denies",
+                       "quote": "b"},
+                      {"actor": "joint:GB+FI", "proposition_id": "p2", "stance": "denies",
+                       "quote": "c"},
+                      {"actor": "joint:GB+XX", "proposition_id": "p2", "stance": "denies",
+                       "quote": "d"}],
+        "framing": [{"actor": "joint:GB+FI", "frame": "f"}, {"actor": "joint:x", "frame": "g"}],
+        "terminology": [{"concept": "c", "usages": [{"actor": "GB", "term": "t"},
+                                                    {"actor": "US", "term": "u"}]}],
+    }
+    out = resolve_voices(analysis, {"CN", "GB", "FI"}, {"joint:CN+GB"})
+    assert [(p["actor"], p["proposition_id"]) for p in out["positions"]] == [
+        ("CN", "p1"), ("GB", "p2"), ("FI", "p2")]
+    assert [f["actor"] for f in out["framing"]] == ["GB", "FI"]
+    assert [u["actor"] for u in out["terminology"][0]["usages"]] == ["GB"]
+    # A real joint voice of the event passes through untouched.
+    kept = resolve_voices({"positions": [{"actor": "joint:CN+GB", "proposition_id": "p1",
+                                          "stance": "asserts", "quote": "q"}],
+                           "framing": [], "terminology": []}, {"CN", "GB"}, {"joint:CN+GB"})
+    assert kept["positions"][0]["actor"] == "joint:CN+GB"
