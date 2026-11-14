@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Search positions{% endblock %}
+{% block body %}
+<section class="intro">
+  <h1>Who takes which stance</h1>
+  <p>Type a subject. The search finds the propositions and claims that contain your words and shows who asserts, qualifies or denies them, with the quote behind each stance. It is a lookup, not an answer: it does not interpret the question, and it finds only what official sources said in the statements we read.</p>
+</section>
+
+<section class="filters search">
+  <input id="q" type="search" placeholder="e.g. sanctions iran, emission reduction, ceasefire" aria-label="Search positions" autofocus>
+  <select id="stance" aria-label="Stance">
+    <option value="">Any stance</option>
+    <option value="asserts">Asserts</option>
+    <option value="qualifies">Qualifies</option>
+    <option value="denies">Denies</option>
+  </select>
+</section>
+<p class="muted small" id="status">{{ propositions }} propositions from compared events and {{ claims }} claims from statements. Every word must occur. Words of three letters or fewer must match exactly; longer words match on their stem, so "sanction" also finds "sanctions" and "sentencing" finds "sentence". Stance words such as "for" and "against" are ignored: use the stance filter.</p>
+
+<section id="props-section" hidden>
+  <h2>Positions on propositions</h2>
+  <p class="muted small">Each row is one proposition from one compared event. ● asserts &nbsp; ◐ qualifies &nbsp; ○ denies. The stance depends on how the proposition is worded: "denies that the sanctions are justified" and "asserts that the sanctions should be lifted" are two ways of being against them. Read the proposition, then the stances.</p>
+  <ul class="hits" id="props"></ul>
+</section>
+
+<section id="claims-section" hidden>
+  <h2>Claims in statements</h2>
+  <p class="muted small">What a single source said, as extracted by the AI model from its statement, without a comparison. The event page has the statement and its link.</p>
+  <ul class="hits" id="claims"></ul>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="{{ root }}/static/search.js"></script>
+{% endblock %}

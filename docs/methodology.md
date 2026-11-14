@@ -56,6 +56,10 @@ None of these labels says anything about truth. A shared floor is what the offic
 | Shared wording | Passages of 8 or more identical words in a row (ignoring case and punctuation) that two or more different actors publish: a joint statement, a quote of another actor, or common talking points. One actor repeating itself does not count. The event page shows one line per group of actors, with the passage length in words; the [Shared wording](wording.html) page lists every passage across events and who shares wording with whom. |
 | Silence | Actors that made at least 2 statements on the same topics in the last 60 days, but none on this event. |
 
+## Finding who takes which stance
+
+The [Positions](search.html) page looks up a subject across every event: "sanctions iran", "emission reduction", "ceasefire". It is a lookup, not an answer. It does not interpret the question; it finds the propositions (from compared events) and the claims (from every statement) that contain the words, and lists who asserts, qualifies or denies each proposition, with the quote behind the stance. Every word must occur; words of three letters or fewer must match exactly, longer words match on their stem. Stance words such as "for" and "against" are ignored, because a stance depends on how the proposition is worded: "denies that the sanctions are justified" and "asserts that the sanctions should be lifted" are both ways of being against them. Filter by stance instead, and read the proposition before the stances. Propositions are phrased per event, so the same question can be worded differently in two events; the search finds words, not issues. Nothing is ranked by relevance: contested propositions first, then the newest, then claims.
+
 ## Rules we give the AI
 
 - Describe what sources say. Never judge truth, intent or legitimacy.

@@ -107,6 +107,17 @@ def test_analysis_and_site(filled, catalog, tmp_path):
     assert (out / "index.html").exists() and (out / "coverage.html").exists()
     assert "Bank of Russia" in (out / "coverage.html").read_text()  # disabled sources shown
 
+    # The search index: every proposition with its stances and quotes, every claim once.
+    index = json.loads((out / "search.json").read_text())
+    p2 = next(p for p in index["props"] if p["e"] == slug and p["l"] == "contested")
+    assert {(s["a"], s["s"]) for s in p2["stances"]} >= {("CN", "denies"), ("US", "asserts")}
+    assert all(s["q"] and s["n"] for s in p2["stances"])
+    claims = [c for c in index["claims"] if c["e"] == slug]
+    assert claims and len({(c["a"], c["c"]) for c in claims}) == len(claims)
+    assert claims[0]["sd"] and index["events"][slug]["t"] == "Strait incident"
+    search = (out / "search.html").read_text()
+    assert "static/search.js" in search and 'href="./search.html"' in page.replace("..", ".")
+
 
 def test_budget_guard(conn):
     conn.execute("INSERT INTO llm_calls (at, purpose, model, input_tokens, output_tokens,"

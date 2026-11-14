@@ -42,9 +42,11 @@ official_lines/
     wording.py        identical passages across actors (event pages + Shared wording page)
     brief.py          weekly newsletter draft
   site/
-    build.py          generates site/ from the database
+    build.py          generates site/ from the database, including search.json (every
+                      proposition with its stances, every claim) for the Positions page
     templates/        Jinja HTML templates
-    static/           style.css, map.js (D3 world map from a CDN)
+    static/           style.css, map.js (D3 world map from a CDN), search.js (the Positions
+                      page: matching runs in the browser over search.json)
 sources/              actors.yaml, sources.yaml
 deploy/               server setup script, systemd timers, Caddy config, push.sh
 tests/                offline tests; tests/conftest.py has the stand-in AI (FakeLLM)
@@ -70,6 +72,7 @@ The schema has a version number (`PRAGMA user_version`). `db.py` upgrades an old
 - **Parts, not whole statements.** A foreign ministry's daily press briefing answers ten or more questions on unrelated issues. Filed as one item it could only join one event, and that ministry would be missing from every other comparison. So extraction splits each statement into one part per issue, and events collect parts. Most statements have exactly one part.
 
 - **Static site.** Nothing to hack, nothing to crash, served for free by Caddy, survives traffic spikes. Filtering and search on the front page run in the browser.
+- **Search is a lookup, not an answer.** The Positions page fetches `search.json` (built with the site; under 1 MB raw, about a fifth of that compressed, loaded on the first keystroke) and matches in the browser: every query word must occur, short words exactly, longer words on a light stem; stance words are dropped and a stance filter offered instead. No server, no model call, no relevance ranking: contested propositions first, then newest. Anything a model would add (an answer to "who is against X", a digest across events) sits on top of this, never instead of it, so a reader can always check the evidence set the digest was made from.
 - **AI grouping instead of embeddings.** At a few hundred statements a day, asking a cheap model to assign statements to open events costs about $1 a month and avoids heavy machine-learning libraries on a small server.
 - **Structured outputs.** The API guarantees the JSON shape (`llm/schemas.py`), so a malformed answer can't corrupt the database.
 - **Metrics outside the AI.** The AI only records who says what, with quotes. Agreement scores and flags are plain arithmetic in `metrics.py`, readable and testable.

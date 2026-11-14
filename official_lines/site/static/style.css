@@ -92,3 +92,11 @@ footer { margin-top: 48px; padding-top: 16px; padding-bottom: 32px; border-top: 
 .passages > li { padding: 12px 0; border-bottom: 1px solid var(--line); }
 .passages > li > p { margin: 0 0 4px; max-width: 760px; }
 .passages .statements li { padding: 4px 0; border: 0; }
+
+.hits { list-style: none; padding: 0; margin: 0; }
+.hit { padding: 12px 0; border-bottom: 1px solid var(--line); }
+.hit p { margin: 0 0 4px; max-width: 760px; }
+.hit .prop { font-weight: bold; }
+.stances { list-style: none; padding: 0; margin: 4px 0 0; }
+.stances li { margin: 2px 0; max-width: 760px; }
+.stances .sym { font-size: 1.1rem; }

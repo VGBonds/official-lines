@@ -4,6 +4,7 @@ The site shows titles, dates, links to the original, our own neutral summaries a
 quotes (max ~30 words). It never republishes the full text of a statement.
 """
 
+import json
 import shutil
 import sqlite3
 from collections import Counter, defaultdict
@@ -71,6 +72,11 @@ def build_site(conn: sqlite3.Connection, catalog: Catalog, out: Path, site_url: 
 
     _write(out / "wording.html", env.get_template("wording.html").render(
         **wording_page(conn, passages), root="."))
+    index = search_index(events, catalog)
+    (out / "search.json").write_text(json.dumps(index, ensure_ascii=False, separators=(",", ":")),
+                                     encoding="utf-8")
+    _write(out / "search.html", env.get_template("search.html").render(
+        propositions=len(index["props"]), claims=len(index["claims"]), root="."))
     _write(out / "coverage.html", env.get_template("coverage.html").render(
         rows=coverage(conn, catalog), root="."))
     method = markdown.markdown((PROJECT_ROOT / "docs" / "methodology.md").read_text(),
@@ -85,7 +91,7 @@ def build_site(conn: sqlite3.Connection, catalog: Catalog, out: Path, site_url: 
             title=path.stem, body=html, root=".."))
         briefs.append(path.stem)
     _write(out / "briefs.html", env.get_template("briefs.html").render(briefs=briefs, root="."))
-    return pages + 5 + len(briefs)
+    return pages + 6 + len(briefs)
 
 
 def _write(path: Path, html: str) -> None:
@@ -107,6 +113,8 @@ def load_events(conn: sqlite3.Connection, catalog: Catalog,
             "id": p["statement_id"], "actor": p["actor"], "kind": p["kind"], "url": p["url"],
             "title": p["title"], "date": p["date"], "summary": p["summary"] or "",
             "claims": (loads(p["data"]) or {}).get("claims", []),
+            "topics": (loads(p["data"]) or {}).get("topics", []),
+            "issue": p["issue"],
             "of_several": p["n_parts"] > 1,
             "span": (p["text_start"], p["text_end"]),
         })
@@ -210,6 +218,36 @@ def stance_matrix(analysis: dict, actor_ids: list[str]) -> dict:
             ],
         })
     return {"columns": columns, "rows": rows}
+
+
+def search_index(events: list[dict], catalog: Catalog) -> dict:
+    """What the search page looks through, built once per site build; the browser does the
+    matching. Every proposition of every compared event, with the stances taken on it and the
+    quotes behind them, and every claim extracted from a statement, with its part's topics.
+    Kept small: the event's title and date appear once, under its slug."""
+    heads, props, claims = {}, [], []
+    for e in events:
+        heads[e["slug"]] = {"t": e["title"], "d": (e["first_seen"] or "")[:10]}
+        for r in (e.get("matrix") or {}).get("rows", []):
+            stances = [{"a": voice, "n": e["voice_names"].get(voice, voice),
+                        "s": c["stance"], "q": c["quote"]}
+                       for voice, c in zip(e["matrix"]["columns"], r["cells"], strict=True)
+                       if c["stance"]]
+            if not stances:
+                continue
+            label = ("contested" if r["contested"] else "shared floor" if r["floor"]
+                     else "uncontested majority" if r["majority"] else "")
+            props.append({"e": e["slug"], "p": r["prop"]["text"], "l": label, "stances": stances})
+        seen: set[tuple[str, str]] = set()
+        for s in e["statements"]:
+            for c in s["claims"]:
+                if (s["actor"], c["text"]) in seen:
+                    continue
+                seen.add((s["actor"], c["text"]))
+                claims.append({"e": e["slug"], "a": s["actor"], "n": catalog.actor(s["actor"]).name,
+                               "sd": (s["date"] or "")[:10], "c": c["text"],
+                               "x": " ".join(s["topics"])})
+    return {"events": heads, "props": props, "claims": claims}
 
 
 def actor_statements(conn: sqlite3.Connection, actor_id: str) -> list[dict]:
