@@ -5,8 +5,8 @@ from pathlib import Path
 
 import yaml
 
-KINDS = {"head_of_government", "mfa", "finance", "central_bank", "gov_press", "org"}
-METHODS = {"rss", "html"}
+KINDS = {"head_of_government", "mfa", "finance", "central_bank", "gov_press", "org", "un_record"}
+METHODS = {"rss", "html", "unsc_records"}  # unsc_records: Security Council verbatim records
 
 # Kinds that colour a country on the map. Central banks are collected but kept off the map (v1).
 MAP_KINDS = {"head_of_government", "mfa", "finance", "gov_press"}
@@ -105,8 +105,14 @@ def validate(catalog: Catalog) -> None:
         if any(bad in (s.url or "").lower() for bad in FORBIDDEN_HOSTS):
             raise CatalogError(f"{where}: media/agency hosts are out of scope ({s.url})")
         actor = catalog.actors[s.actor]
-        if not actor.is_country and s.kind not in {"org", "central_bank"}:
+        if s.method == "unsc_records":
+            if (s.actor, s.kind) != ("un", "un_record"):
+                raise CatalogError(f"{where}: unsc_records sources are actor 'un',"
+                                   f" kind 'un_record'")
+        elif not actor.is_country and s.kind not in {"org", "central_bank"}:
             raise CatalogError(f"{where}: organisations use kind 'org' or 'central_bank'")
+        elif s.kind == "un_record":
+            raise CatalogError(f"{where}: kind 'un_record' is only for unsc_records sources")
 
 
 def on_map(actor: Actor, kind: str) -> bool:

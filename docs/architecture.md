@@ -27,6 +27,8 @@ official_lines/
     http.py           polite HTTP client: honest User-Agent, robots.txt, per-host pause
     parsers.py        RSS/Atom, listing pages (CSS selectors), article text (trafilatura)
     run.py            one collection pass; a failing source never stops the others
+    unsc.py           Security Council verbatim records: meetings table -> record PDF ->
+                      one statement per catalog delegation (method unsc_records)
   llm/
     client.py         Anthropic API wrapper: structured output, cost ledger, budget guard
     schemas.py        the exact JSON shapes the AI must return (pydantic)
@@ -77,6 +79,7 @@ The schema has a version number (`PRAGMA user_version`). `db.py` upgrades an old
 - **Each run reads only what is new.** A source's feed or listing shows its latest items; anything whose URL we don't have yet is fetched (at most 15 per source per run, the rest next run). We never crawl archives, so a source that is down for longer than its list reaches back loses those items for us. If one statement page fails, we keep the feed's title and summary, mark it `page_missing_since`, and retry that page on each run for 2 days; when it arrives, the full text replaces the stub and the AI reads the statement again.
 - **Parts, not whole statements.** A foreign ministry's daily press briefing answers ten or more questions on unrelated issues. Filed as one item it could only join one event, and that ministry would be missing from every other comparison. So extraction splits each statement into one part per issue, and events collect parts. Most statements have exactly one part.
 
+- **A Council record is many statements.** `collect/unsc.py` turns one verbatim record into one statement per delegation, split at the record's formulaic speaker lines, under the UN's permalink plus the actor id. The record's address is one setting (`OFFICIAL_LINES_UN_RECORD_URL`), because the UN's document service forbids bots in its robots.txt and the source waits for an address the UN allows; nothing else depends on where the PDF comes from. The kind `un_record` keeps a Council speech apart from a ministry statement and off the map.
 - **Static site.** Nothing to hack, nothing to crash, served for free by Caddy, survives traffic spikes. Filtering and search on the front page run in the browser.
 - **Search is a lookup, not an answer.** The Positions page fetches `search.json` (built with the site; under 1 MB raw, about a fifth of that compressed, loaded on the first keystroke) and matches in the browser: every query word must occur, short words exactly, longer words on a light stem; stance words are dropped and a stance filter offered instead. No server, no model call, no relevance ranking: contested propositions first, then newest. Anything a model would add (an answer to "who is against X", a digest across events) sits on top of this, never instead of it, so a reader can always check the evidence set the digest was made from.
 - **AI grouping instead of embeddings.** At a few hundred statements a day, asking a cheap model to assign statements to open events costs about $1 a month and avoids heavy machine-learning libraries on a small server.

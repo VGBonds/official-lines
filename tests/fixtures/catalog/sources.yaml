@@ -4,3 +4,4 @@ sources:
   - {id: cn-mfa, actor: CN, kind: mfa, name: MFA China, homepage: https://www.fmprc.gov.cn/eng/, method: html, url: https://www.fmprc.gov.cn/eng/xw/, link_selector: "ul.list a", link_pattern: "/eng/xw/"}
   - {id: io-imf, actor: imf, kind: org, name: IMF, homepage: https://www.imf.org/, method: rss, url: https://www.imf.org/rss}
   - {id: ru-cbr, actor: RU, kind: central_bank, name: Bank of Russia, homepage: https://www.cbr.ru/eng/, method: html, url: https://www.cbr.ru/eng/, enabled: false, status: blocked}
+  - {id: un-sc-records, actor: un, kind: un_record, name: Security Council records, homepage: https://research.un.org/, method: unsc_records, url: https://example.un/render_meeting/scmeetings_2026/EN}

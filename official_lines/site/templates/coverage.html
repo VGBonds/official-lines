@@ -11,7 +11,7 @@
   <tr class="{{ 'off' if not r.source.enabled else ('err' if r.last_error else '') }}">
     <td><a href="actor/{{ actors[r.source.actor].page }}.html">{{ actors[r.source.actor].name }}</a></td>
     <td><a href="{{ r.source.homepage }}" rel="noopener" target="_blank">{{ r.source.name }}</a></td>
-    <td>{{ r.source.kind | replace('_', ' ') }}</td>
+    <td>{{ r.source.kind | kind }}</td>
     <td>{% if not r.source.enabled %}not collected: {{ r.source.status | replace('_', ' ') }}{% elif r.last_error %}error{% else %}ok{% endif %}</td>
     <td>{{ r.statements }}</td>
     <td>{{ r.last_ok_at | date }}</td>

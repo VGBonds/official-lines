@@ -28,6 +28,11 @@ INDEX_DAYS = 45
 ACTOR_DAYS = 90
 WORDING_SHOWN = 200
 STANCE_SYMBOL = {"asserts": "●", "qualifies": "◐", "denies": "○"}
+KIND_LABEL = {"un_record": "at the Security Council, verbatim record"}
+
+
+def kind_label(kind: str) -> str:
+    return KIND_LABEL.get(kind, kind.replace("_", " "))
 
 
 def build_site(conn: sqlite3.Connection, catalog: Catalog, out: Path, site_url: str,
@@ -38,6 +43,7 @@ def build_site(conn: sqlite3.Connection, catalog: Catalog, out: Path, site_url: 
                        built_at=datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC"),
                        stance_symbol=STANCE_SYMBOL)
     env.filters["date"] = lambda v: (v or "")[:10]
+    env.filters["kind"] = kind_label
     env.filters["names"] = lambda ids: _and([catalog.actor(a).name for a in ids])
 
     if out.exists():

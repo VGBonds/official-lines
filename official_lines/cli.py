@@ -94,7 +94,7 @@ def cmd_check(args, settings, catalog, conn):
     try:
         for s in chosen:
             print(f"checking {s.id} ({s.url}) ...", flush=True)
-            r = check_source(s, client)
+            r = check_source(s, client, catalog=catalog)
             verdicts[r.verdict] = verdicts.get(r.verdict, 0) + 1
             print(format_result(r), "\n", flush=True)
     finally:

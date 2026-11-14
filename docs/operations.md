@@ -69,6 +69,11 @@ The AI will sometimes group badly or misstate a stance. In v1 the fixes are manu
   ```
   It re-compares a handful of hand-judged events (about $0.03 each) and prints PASS or FAIL per case with the stance table. When you meet a comparison that is clearly right or clearly wrong in an instructive way, keep it: `uv run official-lines golden --export SLUG`, then write what must hold into the file's `expect` block.
 
+## Yearly, each January
+
+- `sources/sources.yaml`: addresses that contain the year (`my-bnm`, `za-treasury`, `un-sc-records`' meetings table) roll over.
+- Türkiye's mission source (`tr-unmission`) keeps speeches by an id floor in its `link_pattern`; widen it when ids pass 19999.
+
 ## Troubleshooting
 
 | Symptom | Likely cause | What to do |

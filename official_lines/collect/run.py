@@ -68,7 +68,7 @@ def collect(
     with ThreadPoolExecutor(max_workers=6) as pool:
         futures = [
             pool.submit(_fetch_source, s, client, known, max_new_per_source,
-                        retries.get(s.id, []))
+                        retries.get(s.id, []), catalog)
             for s in sources
         ]
         results = []
@@ -97,11 +97,16 @@ def pages_to_retry(conn: sqlite3.Connection) -> dict[str, list[dict]]:
 
 
 def _fetch_source(source: Source, client: PoliteClient, known: set[str], max_new: int,
-                  retries: list[dict]):
+                  retries: list[dict], catalog: Catalog | None = None):
     result = SourceResult(source.id)
     rows: list[dict] = []
     recovered: list[dict] = []
     try:
+        if source.method == "unsc_records":  # one meeting record -> one row per delegation
+            from official_lines.collect.unsc import collect_records
+            result.found, rows = collect_records(source, client, catalog, known, max_new)
+            result.new = len(rows)
+            return result, rows, recovered
         items = _list_items(source, client)
         result.found = len(items)
         for item in [i for i in items if i.url not in known][:max_new]:

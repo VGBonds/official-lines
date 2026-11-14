@@ -14,6 +14,8 @@ We do **not** read news agencies (state-owned or not), broadcasters, newspapers,
 
 One judgement call: a portal run by a government's own office that publishes that government's announcements counts as a government press office, even when it calls itself a newspaper. Today this applies to the Viet Nam Government Portal (run by the Government Office). The Coverage page names every source we read.
 
+Security Council meetings are read from the United Nations' own verbatim records (document symbols S/PV.NNNN), the UN's transcript of each delegation's words: one statement per delegation we follow, shown as "at the Security Council, verbatim record" and never coloured onto the map as the government's line. Not kept: the President's turns, briefers without a country, and delegations outside our panel. The records appear five to ten days after a meeting. (At the time of writing this source waits for an address the UN allows bots to use; see Coverage.)
+
 We read **English** versions only. Some governments say less, or say it differently, in English than in their own language. The [Coverage](coverage.html) page lists every source we read and every one we could not read (blocked, no English version, no machine-readable page). An actor that looks silent may simply be one we cannot read: check Coverage before drawing conclusions.
 
 ## How a statement becomes a comparison
@@ -86,4 +88,5 @@ The exact prompts are public, in the project's source code (`official_lines/llm/
 - **Event boundaries.** Deciding that two statements are about "the same event" is itself a judgement. We keep events narrow, except for ongoing negotiations, which we keep together so that the sides can be compared.
 - **Joint texts.** A joint text is detected by text overlap. A statement that quotes most of another actor's text is treated as publishing it; a joint statement that one signatory paraphrases rather than reposts is not detected and that signatory is a column of its own.
 - **Issue filing.** Which issue a proposition is filed under is the model's choice, made from the proposition's wording and the issue titles. See "Issues" above: the wording is on every row so that the filing can be checked.
+- **Council records.** A record is split at its speaker lines by a fixed rule, not by the AI. A delegation that speaks through the President's chair, or a briefer the line does not place in a country, is left out.
 - **Briefing splits.** Splitting a press briefing into issues is done by the AI. When a passage is attributed to the wrong issue, an actor can appear in the wrong event; the link to the original lets you check.

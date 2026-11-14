@@ -10,8 +10,8 @@ REPO = Path(__file__).parent.parent
 
 
 def test_fixture_catalog_loads(catalog):
-    assert len(catalog.sources) == 5
-    assert [s.id for s in catalog.enabled_sources()] == ["gb-fcdo", "us-fed", "cn-mfa", "io-imf"]
+    assert len(catalog.sources) == 6
+    assert [s.id for s in catalog.enabled_sources()] == ["gb-fcdo", "us-fed", "cn-mfa", "io-imf", "un-sc-records"]
 
 
 def test_real_catalog_is_valid():

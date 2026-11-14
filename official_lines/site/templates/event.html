@@ -92,7 +92,7 @@
       {% for s in items %}
       <li>
         <a href="{{ s.url }}" rel="noopener" target="_blank">{{ s.title }}</a>
-        <span class="muted small">{{ s.date | date }} · {{ s.kind | replace('_', ' ') }}{% if s.of_several %} · one of several topics in this statement{% endif %}</span>
+        <span class="muted small">{{ s.date | date }} · {{ s.kind | kind }}{% if s.of_several %} · one of several topics in this statement{% endif %}</span>
         {% if s.summary %}<p class="summary">{{ s.summary }}</p>{% endif %}
       </li>
       {% endfor %}

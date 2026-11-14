@@ -12,7 +12,7 @@ from urllib.parse import urlparse
 
 import httpx
 
-from official_lines.catalog import Source
+from official_lines.catalog import Catalog, Source
 from official_lines.collect.http import Blocked, PoliteClient
 from official_lines.collect.parsers import parse_article, parse_feed, parse_listing
 
@@ -39,8 +39,11 @@ class CheckResult:
     suggestions: list[str] = field(default_factory=list)  # link candidates for a pattern
 
 
-def check_source(source: Source, client: PoliteClient, samples: int = 2) -> CheckResult:
+def check_source(source: Source, client: PoliteClient, samples: int = 2,
+                 catalog: Catalog | None = None) -> CheckResult:
     result = CheckResult(source.id, "error")
+    if source.method == "unsc_records":
+        return _check_records(source, client, catalog, result, samples)
     try:
         response = client.get(source.url)
     except Blocked as e:
@@ -74,6 +77,43 @@ def check_source(source: Source, client: PoliteClient, samples: int = 2) -> Chec
     if best < GOOD_TEXT_CHARS:
         return _set(result, "thin_text", f"statement pages give at most {best} characters")
     return _set(result, "ok", f"{len(items)} links, statement text up to {best} characters")
+
+
+def _check_records(source: Source, client: PoliteClient, catalog: Catalog | None,
+                   result: CheckResult, samples: int = 2) -> CheckResult:
+    """The meetings table, then the newest record old enough to be published: how many
+    delegations it yields, or why it cannot be fetched (usually robots.txt)."""
+    from official_lines.collect import unsc
+    try:
+        meetings = unsc.parse_meetings(client.get(source.url).text)
+    except Blocked as e:
+        return _set(result, "robots", str(e))
+    except httpx.HTTPError as e:
+        return _set(result, "blocked", f"{type(e).__name__}: the meetings table did not answer")
+    result.links = len(meetings)
+    if not meetings:
+        return _set(result, "no_links", "no meetings in the table (layout changed?)")
+    due = unsc.due_meetings(meetings, set())
+    if not due:
+        return _set(result, "ok", f"{len(meetings)} meetings listed, none due yet")
+    meeting = due[0]
+    url = unsc.record_url(meeting.symbol)
+    try:
+        data = unsc.fetch_record(meeting.symbol, client)
+    except Blocked as e:
+        return _set(result, "robots", f"{len(meetings)} meetings listed; {e}")
+    except httpx.HTTPError as e:
+        return _set(result, "blocked", f"{len(meetings)} meetings listed; record: {e}")
+    if data is None:
+        return _set(result, "thin_text", f"{len(meetings)} meetings listed; {meeting.symbol} "
+                    f"({meeting.date[:10]}) is not published yet at {url}")
+    turns, missed = unsc.split_turns(unsc.pdf_text(data), catalog)
+    for t in turns[:samples]:
+        result.samples.append(Sample(url, f"{t.actor}: {t.text[:60]}", meeting.date, len(t.text)))
+    kept = sorted({t.actor for t in turns})
+    return _set(result, "ok", f"{len(meetings)} meetings listed; {meeting.symbol} on "
+                f"'{meeting.topic}' gives {len(kept)} actors ({', '.join(kept)}); "
+                f"not in the catalog: {', '.join(sorted(missed)) or 'none'}")
 
 
 def _set(result: CheckResult, verdict: str, detail: str) -> CheckResult:

@@ -1359,3 +1359,15 @@ sources:
     enabled: false
     status: js_only
     notes: "2026-11-14: the page is a script shell (1.9 KB, no links); the listing comes from a separate data service. Not read."
+
+  # ---------------- United Nations Security Council: verbatim records (added 2026-11-14)
+  - id: un-sc-records
+    actor: un
+    kind: un_record
+    name: "Security Council meeting records (S/PV), one statement per delegation"
+    homepage: https://research.un.org/en/docs/sc/quick/meetings/2026
+    method: unsc_records
+    url: "https://ydsftksff8.execute-api.us-east-1.amazonaws.com/dev/render_meeting/scmeetings_2026/EN"
+    enabled: false
+    status: blocked
+    notes: "2026-11-14: the url is the data behind the Dag Hammarskjöld Library's meetings table for the year (symbol, date, topic; found in the page's script; the year is in it: roll over each January). The records themselves come from the Official Document System's symbol service (documents.un.org), whose robots.txt disallows /api and /doc to every bot, and the Digital Library's lookup from symbol to record is closed as well; we do not route around either. The source is complete and tested (tests/fixtures) and waits for an address the UN allows: set OFFICIAL_LINES_UN_RECORD_URL in .env once the Library grants access, run `official-lines check --source un-sc-records`, then enable. Records appear 5-10 days after a meeting."

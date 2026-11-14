@@ -7,7 +7,7 @@
 <h2 class="small">Sources we read</h2>
 <ul class="sources">
   {% for s in sources %}
-  <li><a href="{{ s.homepage }}" rel="noopener" target="_blank">{{ s.name }}</a> <span class="muted small">{{ s.kind | replace('_', ' ') }}{% if not s.enabled %} · not collected ({{ s.status | replace('_', ' ') }}){% endif %}</span></li>
+  <li><a href="{{ s.homepage }}" rel="noopener" target="_blank">{{ s.name }}</a> <span class="muted small">{{ s.kind | kind }}{% if not s.enabled %} · not collected ({{ s.status | replace('_', ' ') }}){% endif %}</span></li>
   {% else %}
   <li class="muted">No source yet. This is a coverage gap; see <a href="{{ root }}/coverage.html">Coverage</a>.</li>
   {% endfor %}
