@@ -51,3 +51,25 @@ Russia's military campaign in Ukraine	United Kingdom: “Russia's aggression”U
 the comparison must be with respect to 2 or more different sources. In that case we do not
 have real usage of different suggestive wording, but rather a trivial stylistic 
 wording to avoid repetitions. 
+
+## business
+search by topics: "who is against the sanctions on iran", "who is calling for more CO2 reductions" etc
+
+## excellent points by Claude:
+1. The limit is coverage, not the model. Iran’s MFA, Russia’s finance ministry and 
+Saudi Arabia are still off, and the 39 compared events show that the voices 
+you do have rarely land on the same event. A question like the Iran one needs Tehran,
+Moscow and Beijing in the same table as Washington. 
+I would spend on sources before spending on the paid layer. 
+The grouping step also decides whether a Russian and a French statement on the
+same thing become one event, so questions will expose grouping gaps quickly.
+2. Propositions are per event, questions are across events. 
+Today each event has its own phrasing of a proposition, 
+so a search finds words, not issues. The next step after search is 
+an issue layer: a cheap Haiku call at analysis time that assigns each 
+proposition to a canonical issue such as “sanctions on Iran” or 
+“emission reduction targets”, giving you issue pages with a running table 
+of actors and stances over time. That is the “proposition bank” 
+already in the open list. It is also the honest filter for the event index. 
+The risk is merging two different propositions into one issue and 
+manufacturing agreement, so the original wording must stay visible everywhere.

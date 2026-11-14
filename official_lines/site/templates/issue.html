@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}{{ i.title }}{% endblock %}
+{% block body %}
+<article class="issue-page">
+  <p class="muted small"><a href="{{ root }}/issues.html">Issues</a> · {{ i.counts.propositions }} propositions from {{ i.counts.events }} {{ 'event' if i.counts.events == 1 else 'events' }} · {{ i.columns | length }} voices{% if i.counts.contested %} · {{ i.counts.contested }} contested{% endif %}</p>
+  <h1>{{ i.title }}</h1>
+  <p class="prose muted small">Each row is one proposition from one compared event, in that event's own wording, filed under this issue by an AI model. The filing is the model's grouping of differently worded propositions: two rows under one issue can ask different things, so read the wording before the stances. ● asserts &nbsp; ◐ qualifies &nbsp; ○ denies &nbsp; blank: no stance in that event's statements. Hover or tap a symbol for the quote. <a href="{{ root }}/method.html">Method</a>.</p>
+
+  <div class="table-wrap">
+  <table class="matrix issue-table">
+    <thead><tr><th>Date</th><th>Event</th><th>Proposition</th>{% for c in i.columns %}<th>{{ i.voice_names.get(c, c) }}</th>{% endfor %}</tr></thead>
+    <tbody>
+    {% for r in i.rows %}
+      <tr class="{{ 'floor' if r.floor else '' }} {{ 'majority' if r.majority else '' }} {{ 'contested' if r.contested else '' }}">
+        <td class="nowrap">{{ r.date }}</td>
+        <td><a href="{{ root }}/event/{{ r.slug }}.html">{{ r.event_title }}</a></td>
+        <td class="prop">{{ r.prop.text }}{% if r.floor %} <span class="badge">shared floor</span>{% endif %}{% if r.majority %} <span class="badge">uncontested majority</span>{% endif %}{% if r.contested %} <span class="badge">contested</span>{% endif %}</td>
+        {% for c in i.columns %}{% set cell = r.cells.get(c) %}<td class="cell">{% if cell %}<span class="stance" title="“{{ cell.quote }}”" tabindex="0">{{ stance_symbol[cell.stance] }}</span>{% endif %}</td>{% endfor %}
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+
+  <h2>Stances per voice</h2>
+  <p class="muted small">How often each voice asserts, qualifies or denies a proposition filed under this issue. Counts, not a position: the propositions are worded differently, and a denial of one can mean the same as an assertion of another.</p>
+  <div class="table-wrap">
+  <table class="counts">
+    <thead><tr><th>Voice</th><th>● asserts</th><th>◐ qualifies</th><th>○ denies</th><th>Events</th></tr></thead>
+    <tbody>
+    {% for c in i.columns %}{% set n = i.counts.voices[c] %}
+    <tr><td>{{ i.voice_names.get(c, c) }}</td><td>{{ n.asserts or '' }}</td><td>{{ n.qualifies or '' }}</td><td>{{ n.denies or '' }}</td><td>{{ n.events }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</article>
+{% endblock %}

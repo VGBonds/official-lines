@@ -21,6 +21,7 @@ from official_lines.db import loads
 from official_lines.pipeline import metrics, wording
 from official_lines.pipeline.analyze import late_actors
 from official_lines.pipeline.events import PART_COLUMNS
+from official_lines.pipeline.issues import fingerprint
 
 HERE = Path(__file__).parent
 INDEX_DAYS = 45
@@ -43,11 +44,13 @@ def build_site(conn: sqlite3.Connection, catalog: Catalog, out: Path, site_url: 
         shutil.rmtree(out)
     (out / "event").mkdir(parents=True)
     (out / "actor").mkdir()
+    (out / "issue").mkdir()
     (out / "briefs").mkdir()
     shutil.copytree(HERE / "static", out / "static")
 
     passages = shared_passages(conn)
     events = load_events(conn, catalog, passages)
+    issues = issue_pages(conn, events)
     pages = 0
     for e in events:
         _write(out / "event" / f"{e['slug']}.html",
@@ -72,6 +75,11 @@ def build_site(conn: sqlite3.Connection, catalog: Catalog, out: Path, site_url: 
 
     _write(out / "wording.html", env.get_template("wording.html").render(
         **wording_page(conn, passages), root="."))
+    for i in issues:
+        _write(out / "issue" / f"{i['slug']}.html",
+               env.get_template("issue.html").render(i=i, root=".."))
+        pages += 1
+    _write(out / "issues.html", env.get_template("issues.html").render(issues=issues, root="."))
     index = search_index(events, catalog)
     (out / "search.json").write_text(json.dumps(index, ensure_ascii=False, separators=(",", ":")),
                                      encoding="utf-8")
@@ -91,7 +99,7 @@ def build_site(conn: sqlite3.Connection, catalog: Catalog, out: Path, site_url: 
             title=path.stem, body=html, root=".."))
         briefs.append(path.stem)
     _write(out / "briefs.html", env.get_template("briefs.html").render(briefs=briefs, root="."))
-    return pages + 6 + len(briefs)
+    return pages + 7 + len(briefs)
 
 
 def _write(path: Path, html: str) -> None:
@@ -218,6 +226,54 @@ def stance_matrix(analysis: dict, actor_ids: list[str]) -> dict:
             ],
         })
     return {"columns": columns, "rows": rows}
+
+
+def issue_pages(conn: sqlite3.Connection, events: list[dict]) -> list[dict]:
+    """One entry per issue: its rows (one per proposition and event, oldest event first,
+    with the proposition's original wording and the stance cells of that event's table),
+    its columns (every voice that took a stance in any row, in order of first appearance)
+    and plain counts (metrics.issue_counts). Also marks each event's propositions with their
+    issue, for the event page. A filing made for propositions the event's comparison no longer has
+    (a re-comparison reworded them) is stale and left out until the next run files the event
+    again."""
+    by_event: dict[int, dict[str, int]] = defaultdict(dict)
+    hashes: dict[int, str] = {}
+    titles: dict[int, dict] = {}
+    for r in conn.execute(
+        """SELECT m.event_id, m.proposition_id, m.propositions_hash, i.id, i.slug, i.title
+           FROM issue_propositions m JOIN issues i ON i.id = m.issue_id"""
+    ):
+        by_event[r["event_id"]][r["proposition_id"]] = r["id"]
+        hashes[r["event_id"]] = r["propositions_hash"]
+        titles[r["id"]] = {"id": r["id"], "slug": r["slug"], "title": r["title"]}
+    rows_of: dict[int, list[dict]] = defaultdict(list)
+    names: dict[str, str] = {}
+    for e in sorted(events, key=lambda e: (e["first_seen"] or "", e["id"])):
+        filed = by_event.get(e["id"])
+        if not filed or not e.get("matrix"):
+            continue
+        if hashes[e["id"]] != fingerprint(e["analysis"]["llm"]["propositions"]):
+            continue  # stale
+        e["issue_of"] = {pid: titles[iid] for pid, iid in filed.items()}
+        names.update(e["voice_names"])
+        for r in e["matrix"]["rows"]:
+            issue_id = filed.get(r["prop"]["id"])
+            if issue_id is None:
+                continue
+            cells = {v: c for v, c in zip(e["matrix"]["columns"], r["cells"], strict=True)
+                     if c["stance"]}
+            rows_of[issue_id].append({
+                "event_id": e["id"], "slug": e["slug"], "event_title": e["title"],
+                "date": (e["first_seen"] or "")[:10], "prop": r["prop"], "floor": r["floor"],
+                "majority": r["majority"], "contested": r["contested"], "cells": cells})
+    issues = []
+    for issue_id, rows in rows_of.items():
+        columns = list(dict.fromkeys(v for r in rows for v in r["cells"]))
+        issues.append({**titles[issue_id], "rows": rows, "columns": columns,
+                       "voice_names": {v: names.get(v, v) for v in columns},
+                       "counts": metrics.issue_counts(rows), "last": rows[-1]["date"]})
+    return sorted(issues, key=lambda i: (-i["counts"]["events"], -i["counts"]["contested"],
+                                         i["title"]))
 
 
 def search_index(events: list[dict], catalog: Catalog) -> dict:

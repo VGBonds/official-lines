@@ -142,3 +142,26 @@ class EventAnalysis(BaseModel):
         "Empty if none."
     )
     framing: list[Framing]
+
+
+# --- Step 4: filing propositions under issues --------------------------------------------------
+
+class IssueChoice(BaseModel):
+    proposition_id: str
+    issue: str = Field(
+        description="Either the id of an existing issue (e.g. 'I12'), or a new key "
+        "'new:<short-key>'. Propositions that share a new key go under one new issue."
+    )
+
+
+class NewIssue(BaseModel):
+    key: str = Field(description="The 'new:<short-key>' used in choices.")
+    title: str = Field(
+        description="Short neutral noun phrase naming the question at issue, in nobody's "
+        "wording, e.g. 'Sanctions on Iran' or 'Euro area interest rate path'."
+    )
+
+
+class IssueMapping(BaseModel):
+    choices: list[IssueChoice] = Field(description="Exactly one choice per proposition.")
+    new_issues: list[NewIssue]

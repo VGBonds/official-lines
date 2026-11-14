@@ -44,6 +44,7 @@ shows this month's AI spend per step. Typical month:
 | extract | Haiku 5.5 | ~300–600 statements/day | ~$5–10 |
 | group | Haiku 5.5 | ~20–30 calls/day | ~$1 |
 | analyze | Sonnet 5.5 | ≤ 12 events/day | ~$10–20 |
+| issues | Haiku 5.5 | one call per comparison, ≤ 24/day | < $0.30 |
 | brief | Sonnet 5.5 | 4/month | ~$1 |
 
 Levers in `.env` if it gets too expensive:
@@ -61,6 +62,7 @@ The AI will sometimes group badly or misstate a stance. In v1 the fixes are manu
 
 - **Re-run a comparison** after more statements arrived: `uv run official-lines analyze --event SLUG`.
 - **Two events that should be one, or a statement in the wrong event:** for now, fix it in the database with `sqlite3 data/official-lines.db` (e.g. `UPDATE parts SET event_id=12 WHERE statement_id=345;`; a press briefing has several parts, see `SELECT id, idx, issue FROM parts WHERE statement_id=345;`), then re-analyse. A small editor command for this is on the [roadmap](roadmap.md).
+- **A proposition filed under the wrong issue:** move it in the database (`UPDATE issue_propositions SET issue_id=7 WHERE event_id=12 AND proposition_id='p3';`, issues are in `SELECT id, title FROM issues;`), then `uv run official-lines build`. A re-comparison of the event files it again from scratch. After changing the filing prompt, `uv run official-lines issues --all` discards every issue and files every compared event again (it prints the estimated cost first, about a cent per 40 events; the addresses of issue pages change).
 - **A systematic mistake** (the same kind of error again and again): the prompts in `official_lines/llm/prompts.py` are the place to fix it. Prompts are published methodology, so note changes in the Method page. After any prompt change, run the golden set, so that the fix does not quietly break comparisons that were right before:
   ```bash
   uv run official-lines golden

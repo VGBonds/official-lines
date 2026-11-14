@@ -40,7 +40,7 @@
       <tbody>
       {% for r in e.matrix.rows %}
         <tr class="{{ 'floor' if r.floor else '' }} {{ 'majority' if r.majority else '' }} {{ 'contested' if r.contested else '' }}">
-          <td>{{ r.prop.text }}{% if r.floor %} <span class="badge">shared floor</span>{% endif %}{% if r.majority %} <span class="badge">uncontested majority</span>{% endif %}{% if r.contested %} <span class="badge">contested</span>{% endif %}</td>
+          <td>{{ r.prop.text }}{% if e.issue_of and e.issue_of.get(r.prop.id) %} <a class="small issue-link" href="{{ root }}/issue/{{ e.issue_of[r.prop.id].slug }}.html" title="Issue: this proposition filed with others on the same question across events">{{ e.issue_of[r.prop.id].title }}</a>{% endif %}{% if r.floor %} <span class="badge">shared floor</span>{% endif %}{% if r.majority %} <span class="badge">uncontested majority</span>{% endif %}{% if r.contested %} <span class="badge">contested</span>{% endif %}</td>
           {% for c in r.cells %}<td class="cell">{% if c.stance %}<span class="stance" title="“{{ c.quote }}”" tabindex="0">{{ stance_symbol[c.stance] }}</span>{% endif %}</td>{% endfor %}
         </tr>
       {% endfor %}

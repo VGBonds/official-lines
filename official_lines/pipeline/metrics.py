@@ -236,3 +236,23 @@ def compute(analysis: dict, texts_by_actor: dict[str, str], history: dict[str, l
         "unusual_alignment": unusual_alignment(pairs, history),
         "shared_wording": shared_wording(texts_by_actor),
     }
+
+
+def issue_counts(rows: list[dict]) -> dict:
+    """Plain counts for one issue over its rows (one per proposition and event; each row's
+    `cells` maps a voice to its stance): events, propositions, contested rows, and per voice
+    how often it asserts, qualifies and denies. No score: the propositions under one issue
+    are worded differently, so stances on them do not add up to a position."""
+    voices: dict[str, dict[str, int]] = {}
+    events_of: dict[str, set] = {}
+    for r in rows:
+        for voice, cell in r["cells"].items():
+            stance = cell["stance"] if isinstance(cell, dict) else cell
+            counts = voices.setdefault(voice, {"asserts": 0, "qualifies": 0, "denies": 0,
+                                               "events": 0})
+            counts[stance] += 1
+            events_of.setdefault(voice, set()).add(r["event_id"])
+    for voice, counts in voices.items():
+        counts["events"] = len(events_of[voice])
+    return {"events": len({r["event_id"] for r in rows}), "propositions": len(rows),
+            "contested": sum(1 for r in rows if r.get("contested")), "voices": voices}

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Issues{% endblock %}
+{% block body %}
+<section class="intro">
+  <h1>Issues</h1>
+  <p>Questions that official sources return to across events. Each compared event's propositions are filed under an issue by an AI model, so that stances taken in different events on the same question can be read in one table over time. The model only chooses the issue; the stances, quotes and the wording of every proposition stay as the comparison recorded them. An issue is a grouping of differently worded propositions, so read the wording on each row before the stances. <a href="method.html">Method</a>.</p>
+</section>
+
+{% if issues %}
+<p class="muted small">{{ issues | length }} issues. <strong>Rows:</strong> propositions filed under the issue, one per event. <strong>Contested:</strong> rows on which one voice asserts and another denies.</p>
+<div class="table-wrap">
+<table class="issues">
+  <thead><tr><th>Issue</th><th>Events</th><th>Rows</th><th>Contested</th><th>Voices</th><th>Latest</th></tr></thead>
+  <tbody>
+  {% for i in issues %}
+  <tr><td><a href="issue/{{ i.slug }}.html">{{ i.title }}</a></td><td>{{ i.counts.events }}</td><td>{{ i.counts.propositions }}</td><td>{{ i.counts.contested or '' }}</td><td>{{ i.columns | length }}</td><td>{{ i.last }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<p class="muted">No issues yet. Propositions are filed under issues once events have been compared.</p>
+{% endif %}
+{% endblock %}

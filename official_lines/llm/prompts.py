@@ -123,6 +123,36 @@ Event (provisional title): {title}
 Passages from official statements (one issue each):
 {statements}"""
 
+ISSUE_SYSTEM = f"""\
+You file the propositions from one comparison of official statements under issues, so that
+the stances taken in different events on the same question can be read in one table over
+time. An issue is a question that official sources return to across events, named as a
+short neutral noun phrase: 'Sanctions on Iran', 'Euro area interest rate path', 'Ceasefire
+in Gaza', 'Legality of the Hong Kong national security prosecutions', 'South Africa's
+participation in the G20'. Not the event itself ('ECB decision of 29 Oct 2026'), not a
+broad theme ('Middle East', 'inflation'), never one side's wording.
+
+- File a proposition under an existing issue whenever it bears on the same question, even
+  if it is phrased differently or from the other side. The proposition keeps its own
+  wording; the issue only groups it.
+- Create a new issue only when no existing issue fits. Several propositions of one event
+  may share one new issue, or go under different issues.
+- A proposition about a detail of a larger question (a figure, a date, one step) goes
+  under that question's issue, not under an issue of its own.
+- Every proposition gets exactly one issue.
+You only choose or name issues. You do not judge, rephrase or rate the propositions.
+
+{NEUTRALITY_RULES}"""
+
+ISSUE_USER = """\
+Event: {title}
+
+Propositions (id: text):
+{propositions}
+
+Existing issues (id: title):
+{issues}"""
+
 BRIEF_SYSTEM = f"""\
 You draft a weekly newsletter, 'Official Lines: where official narratives met and parted this
 week'. Readers are curious, critical people who want to see every official side and judge

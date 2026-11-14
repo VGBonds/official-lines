@@ -77,6 +77,14 @@ th { font-family: system-ui, sans-serif; font-size: .8rem; color: var(--muted); 
 .matrix tr.floor td:first-child { background: var(--floor); }
 .matrix tr.majority td:first-child { background: var(--majority); }
 .matrix tr.contested td:first-child { background: var(--contested); }
+.issue-table tr.floor td.prop { background: var(--floor); }
+.issue-table tr.majority td.prop { background: var(--majority); }
+.issue-table tr.contested td.prop { background: var(--contested); }
+.issue-table tr.floor td:first-child, .issue-table tr.majority td:first-child, .issue-table tr.contested td:first-child { background: inherit; }
+.issue-table td.prop { min-width: 18em; }
+.nowrap { white-space: nowrap; }
+.issue-link { font-family: system-ui, sans-serif; display: block; margin-top: 2px; }
+.counts td:not(:first-child) { text-align: center; width: 1%; white-space: nowrap; }
 .stance { cursor: help; }
 .term { display: inline-block; margin-right: 16px; }
 .notes li { margin-bottom: 6px; }

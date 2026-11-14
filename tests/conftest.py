@@ -11,9 +11,12 @@ from official_lines.llm.schemas import (
     EventAnalysis,
     Framing,
     Grouping,
+    IssueChoice,
+    IssueMapping,
     IssuePart,
     KeyTerm,
     NewEvent,
+    NewIssue,
     Position,
     Proposition,
     StatementExtraction,
@@ -54,9 +57,15 @@ def trade_part():
     )
 
 
+# Issue titles the fake files propositions under (by the proposition's exact text).
+ISSUE_OF = {"A ship was stopped.": "Ship stoppages in the strait",
+            "The stop violated maritime law.": "Maritime law in the strait"}
+
+
 class FakeLLM:
     """Stands in for the API. Parts are grouped by their issue; each actor gets a stance.
-    A 'press conference' is split into two parts: the strait and trade talks."""
+    A 'press conference' is split into two parts: the strait and trade talks. Propositions
+    are filed under the issues in ISSUE_OF, reusing an issue the prompt already lists."""
 
     def __init__(self):
         self.calls = []
@@ -102,6 +111,19 @@ class FakeLLM:
                     for i, a in enumerate(actors)])],
                 framing=[Framing(actor=a, frame="Emphasises navigation.") for a in actors],
             )
+        if schema is IssueMapping:
+            existing = {title: f"I{i}" for i, title in re.findall(r"^I(\d+): (.+)$", user, re.M)}
+            choices, new = [], {}
+            for pid, text in re.findall(r"^(p\d+): (.+)$", user, flags=re.M):
+                title = ISSUE_OF.get(text, "Other questions")
+                if title in existing:
+                    choices.append(IssueChoice(proposition_id=pid, issue=existing[title]))
+                else:
+                    key = "new:" + title.lower().replace(" ", "-")
+                    new[key] = title
+                    choices.append(IssueChoice(proposition_id=pid, issue=key))
+            return IssueMapping(choices=choices,
+                                new_issues=[NewIssue(key=k, title=t) for k, t in new.items()])
         raise AssertionError(f"unexpected schema {schema}")
 
     def text(self, *, purpose, model, system, user, max_tokens, effort):

@@ -29,6 +29,10 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("group", help="LLM step 2: group statement parts into events")
     p = sub.add_parser("analyze", help="LLM step 3: compare actors on multi-actor events")
     p.add_argument("--event", help="analyse this event slug now (ignores the daily cap)")
+    p = sub.add_parser("issues", help="LLM step 4: file propositions of compared events under"
+                       " issues (the daily run does this; here for a check or a redo)")
+    p.add_argument("--all", action="store_true", help="discard every issue and file every"
+                   " compared event again (issue page addresses change)")
     sub.add_parser("build", help="generate the static website")
     p = sub.add_parser("run", help="collect + extract + group + analyze + build (the daily job)")
     p.add_argument("--no-llm", action="store_true", help="only collect and build")
@@ -129,9 +133,40 @@ def cmd_group(args, settings, catalog, conn):
 
 def cmd_analyze(args, settings, catalog, conn):
     from official_lines.pipeline.analyze import analyze_due
-    n = analyze_due(conn, catalog, _llm(settings, conn), settings.analyze_model,
+    from official_lines.pipeline.issues import map_due
+    llm = _llm(settings, conn)
+    n = analyze_due(conn, catalog, llm, settings.analyze_model,
                     settings.max_analyses_per_day, only_slug=getattr(args, "event", None))
     print(f"analysed {n} events")
+    m = map_due(conn, llm, settings.extract_model)
+    print(f"filed the propositions of {m} events under issues")
+
+
+def cmd_issues(args, settings, catalog, conn):
+    from official_lines.pipeline import issues
+    n_issues = conn.execute("SELECT COUNT(*) FROM issues").fetchone()[0]
+    if args.all:
+        due = conn.execute("SELECT * FROM events WHERE analysis IS NOT NULL").fetchall()
+        n_issues = 0
+    else:
+        due = issues.events_due(conn)
+    if not due:
+        print(f"nothing to file: every compared event is filed ({n_issues} issues)")
+        return
+    props = sum(len(issues.propositions_of(e)) for e in due) / len(due)
+    est = issues.estimate_cost(len(due), n_issues, props, settings.extract_model)
+    print(f"{len(due)} compared events to file ({props:.1f} propositions each, {n_issues} "
+          f"issues so far): estimated cost ${est:.2f} with {settings.extract_model}")
+    started = now_iso()
+    llm = _llm(settings, conn)
+    n = issues.remap_all(conn, llm, settings.extract_model) if args.all \
+        else issues.map_due(conn, llm, settings.extract_model)
+    dropped = issues.drop_empty_issues(conn)
+    spent = conn.execute("SELECT COALESCE(SUM(cost_usd), 0) FROM llm_calls WHERE purpose=? AND"
+                         " at >= ?", (issues.PURPOSE, started)).fetchone()[0]
+    total = conn.execute("SELECT COUNT(*) FROM issues").fetchone()[0]
+    print(f"filed {n} of {len(due)} events; {total} issues now"
+          f"{f' ({dropped} empty ones dropped)' if dropped else ''}; cost ${spent:.3f}")
 
 
 def cmd_build(args, settings, catalog, conn):
@@ -212,7 +247,7 @@ def cmd_serve(args, settings, catalog, conn):
 COMMANDS = {
     "sources": cmd_sources, "check": cmd_check, "collect": cmd_collect, "extract": cmd_extract,
     "group": cmd_group, "analyze": cmd_analyze, "build": cmd_build, "run": cmd_run,
-    "brief": cmd_brief, "feature": cmd_feature,
+    "issues": cmd_issues, "brief": cmd_brief, "feature": cmd_feature,
     "unfeature": functools.partial(cmd_feature, value=0),
     "golden": cmd_golden, "costs": cmd_costs, "serve": cmd_serve,
 }

@@ -7,6 +7,8 @@ statements  one official item: url, title, date, text (private, for analysis), L
 parts       one issue within a statement (a press briefing has many, most statements one);
             parts, not whole statements, are grouped into events
 events      a group of parts about the same development, plus its analysis
+issues      a subject that propositions from different events are filed under
+issue_propositions  which issue each proposition of a compared event was filed under
 llm_calls   every LLM call with tokens and cost (the budget guard reads this)
 """
 
@@ -79,6 +81,24 @@ CREATE TABLE IF NOT EXISTS events (
     analysed_statement_count INTEGER DEFAULT 0  -- number of parts at the last analysis
 );
 
+CREATE TABLE IF NOT EXISTS issues (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    slug          TEXT NOT NULL UNIQUE,
+    title         TEXT NOT NULL,
+    created_at    TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS issue_propositions (
+    event_id        INTEGER NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+    proposition_id  TEXT NOT NULL,    -- 'p1', 'p2', ... in events.analysis
+    issue_id        INTEGER NOT NULL REFERENCES issues(id) ON DELETE CASCADE,
+    propositions_hash TEXT NOT NULL,  -- fingerprint of the propositions filed; differs after
+                                      -- a re-comparison reworded them: filed again
+    mapped_at       TEXT NOT NULL,
+    PRIMARY KEY (event_id, proposition_id)
+);
+CREATE INDEX IF NOT EXISTS idx_issue_propositions_issue ON issue_propositions(issue_id);
+
 CREATE TABLE IF NOT EXISTS llm_calls (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
     at            TEXT NOT NULL,
@@ -108,7 +128,7 @@ def connect(db_path: Path) -> sqlite3.Connection:
     return conn
 
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4  # 3 -> 4 only adds the issues tables; nothing is redone
 
 
 def _migrate(conn: sqlite3.Connection) -> None:

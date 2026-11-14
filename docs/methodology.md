@@ -60,6 +60,14 @@ None of these labels says anything about truth. A shared floor is what the offic
 
 The [Positions](search.html) page looks up a subject across every event: "sanctions iran", "emission reduction", "ceasefire". It is a lookup, not an answer. It does not interpret the question; it finds the propositions (from compared events) and the claims (from every statement) that contain the words, and lists who asserts, qualifies or denies each proposition, with the quote behind the stance. Every word must occur; words of three letters or fewer must match exactly, longer words match on their stem. Stance words such as "for" and "against" are ignored, because a stance depends on how the proposition is worded: "denies that the sanctions are justified" and "asserts that the sanctions should be lifted" are both ways of being against them. Filter by stance instead, and read the proposition before the stances. Propositions are phrased per event, so the same question can be worded differently in two events; the search finds words, not issues. Nothing is ranked by relevance: contested propositions first, then the newest, then claims.
 
+## Issues
+
+Propositions are phrased per event. To follow one question across events, the [Issues](issues.html) page files every proposition of a compared event under an **issue**: a short neutral name for the question at issue, such as "Sanctions on Iran" or "Euro area interest rate path". The filing is done by an AI model (currently Claude Haiku) right after the comparison. It sees the event's propositions and the list of existing issues, and for each proposition either picks an existing issue or names a new one. That is all it does: it never touches a stance or a quote, and it never rephrases a proposition.
+
+An issue page is a running table: one row per proposition and event, in the event's own wording, with the date, a link to the event and each voice's stance with its quote. Below it, how often each voice asserts, qualifies or denies a proposition under this issue. These are counts, not a position: the propositions under one issue are worded differently, and denying "the sanctions are justified" and asserting "the sanctions should be lifted" are the same side of the question.
+
+The honest caveat: **an issue is a model's grouping of differently worded propositions.** Two propositions that ask different things can end up under one issue, and one question can be filed under two issues with different names. That is why the original wording stays on every row and every proposition on an event page links to its issue: read the proposition, then the stances. No agreement or distance is computed across events, and the issue list is not curated; it grows as events are compared.
+
 ## Rules we give the AI
 
 - Describe what sources say. Never judge truth, intent or legitimacy.
@@ -77,4 +85,5 @@ The exact prompts are public, in the project's source code (`official_lines/llm/
 - **Model leanings.** Any AI model carries leanings from its training. We work against this with the rules above, verbatim quotes, and by publishing our prompts.
 - **Event boundaries.** Deciding that two statements are about "the same event" is itself a judgement. We keep events narrow, except for ongoing negotiations, which we keep together so that the sides can be compared.
 - **Joint texts.** A joint text is detected by text overlap. A statement that quotes most of another actor's text is treated as publishing it; a joint statement that one signatory paraphrases rather than reposts is not detected and that signatory is a column of its own.
+- **Issue filing.** Which issue a proposition is filed under is the model's choice, made from the proposition's wording and the issue titles. See "Issues" above: the wording is on every row so that the filing can be checked.
 - **Briefing splits.** Splitting a press briefing into issues is done by the AI. When a passage is attributed to the wrong issue, an actor can appear in the wrong event; the link to the original lets you check.

@@ -12,7 +12,7 @@ It does not judge truth. It shows the positions so that readers can judge for th
  official feeds and          collect         extract           group            compare           build
  press pages (≈15 countries ───────────► statements ───────► claims, terms ──► events ────────► stance table ──► static
  + ≈15 organisations)        every 3 h    (SQLite)  Haiku    per statement     Haiku            Sonnet + maths    website
-                                                                                                                  + weekly brief
+                                                                                                 + issues (Haiku)  + weekly brief
 ```
 
 Everything is Python. One small server, one SQLite file, a static website. Target running cost: **about $25–50 a month**.
@@ -51,6 +51,7 @@ New to all of this? Start with **[docs/getting-started.md](docs/getting-started.
 | `uv run official-lines extract` | AI step 1: read new statements |
 | `uv run official-lines group` | AI step 2: group statement parts (one issue each) into events |
 | `uv run official-lines analyze` | AI step 3: compare actors on events (`--event SLUG` for one) |
+| `uv run official-lines issues` | AI step 4: file the propositions of compared events under issues (`run` does this too; `--all` refiles everything, estimated cost printed first) |
 | `uv run official-lines build` | Generate the website into `site/` |
 | `uv run official-lines run` | All of the above, in order (this is what the server runs every 3 hours) |
 | `uv run official-lines brief` | Draft the weekly newsletter into `data/briefs/` |
